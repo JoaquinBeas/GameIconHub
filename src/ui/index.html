@@ -92,9 +92,15 @@
             <div class="header">
                 <!-- <h1 class="title">GAME ICON HUB</h1> -->
 
-                <div class="search-section">
-                    <input type="text" class="search-bar" placeholder="Search a game" id="searchInput">
-                    <button class="search-button" id="searchButton">Search</button>
+                <div class="searchBox">
+                    <input class="searchInput" type="text" id="searchInput" placeholder="Search a game" />
+                    <button class="searchButton" id="searchButton" title="Search">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 29 29" fill="none">
+                            <path
+                                d="M23.7953 23.9182L19.0585 19.1814M19.0585 19.1814C20.7168 17.523 21.5794 15.4405 21.5794 13.269C21.5794 11.0975 20.7168 9.01499 19.1814 7.47953C17.6459 5.94407 15.5634 5.08145 13.3919 5.08145C11.2204 5.08145 9.13789 5.94407 7.60242 7.47953C6.06696 9.01499 5.20435 11.0975 5.20435 13.269C5.20435 15.4405 6.06696 17.523 7.60242 19.0585C9.13789 20.594 11.2204 21.4566 13.3919 21.4566C15.5634 21.4566 17.6459 20.594 19.1814 19.0585Z"
+                                stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
                 </div>
             </div>
 
@@ -103,14 +109,13 @@
             </div>
         </div>
     </div>
-<div id="modalOverlay" class="modal-overlay">
-    <div class="modal-content" id="modalContent">
-        <div id="modalPicture" class="modal-picture"></div>
-    </div>
-</div>
+    <div id="modalOverlay" class="modal-overlay">
+        <div class="modal-content" id="modalContent">
+            <div id="modalPicture" class="modal-picture"></div>
+        </div>
 
     <script src="renderer.js"></script>
-    
+
 </body>
 
 </html>
