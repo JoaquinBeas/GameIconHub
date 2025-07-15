@@ -17,6 +17,7 @@ body {
     width: 100vw;
     padding-top: 32px;
 }
+.app-container{ overflow-x:hidden; } 
 
 /* Sidebar Styles */
 .sidebar {
@@ -764,4 +765,98 @@ body {
     opacity: 1;
     transform: scale(1);
   }
+}
+.send-btn-modern {
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    width: 200px;
+    height: 65px;
+    border-radius: 13px;
+    font-size: 18px;
+    font-weight: 500;
+    background-color: #f9fbf9;
+    border: 3px solid #b7b8b7;
+    box-shadow: 0px 0px 4px  rgba(182,143,255,1);
+    overflow: hidden;
+    padding: 0 13px;
+    border-top-color: #d3d3d3;
+    border-bottom-color: #7e7f7e;
+    transition: all 0.3s ease;
+}
+
+.send-btn-modern .icon {
+    aspect-ratio: 1/1;
+    width: 25px;
+    position: absolute;
+    top: 50%;
+    left: 30px;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    transition: 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.send-btn-modern .text {
+    margin-left:10px;
+    z-index: 10;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.send-btn-modern .text span {
+    transition: 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.send-btn-modern .tab {
+    margin: 0 2px;
+}
+
+.send-btn-modern::before {
+    content: "";
+    position: absolute;
+    background-color: #fff;
+    border-radius: 50px;
+    box-shadow: inset 0px 10px 50px -40px rgba(66, 68, 90, 1);
+    transition: all 0.3s ease;
+}
+
+.send-btn-modern:hover::before {
+    width: 200px;
+    height: 64px;
+    border-radius: 13px;
+    box-shadow: inset 0px -10px 50px -40px rgba(66, 68, 90, 1);
+}
+
+.send-btn-modern:hover .text span {
+    transform: translateY(80px);
+    opacity: 0;
+}
+
+.send-btn-modern:hover .icon {
+    width: 35px;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.send-btn-modern:active {
+    transform: translateY(5px);
+}
+
+.send-btn-modern.sent {
+    background-color: #e0ffe0;
+    border-color:  rgb(182,143,255);
+    color: #000000;
+}
+
+.send-btn-modern.sent .icon {
+    display: none;
+}
+
+.send-btn-modern.sent .text {
+    justify-content: center;
+    width: 100%;
 }
