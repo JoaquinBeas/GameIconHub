@@ -1,12 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dark Item Manager</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
+    <div class="title-bar" id="titleBar">
+        <div class="title-text">GAME ICON HUB</div>
+
+        <div class="window-controls">
+            <button class="win-btn" id="minBtn" title="Minimize">
+                <!-- línea -->
+                <svg viewBox="0 0 10 1">
+                    <rect width="10" height="1" />
+                </svg>
+            </button>
+
+            <button class="win-btn" id="maxBtn" title="Maximize / Restore">
+                <!-- cuadrado -->
+                <svg viewBox="0 0 10 10" fill="none" stroke-width="1">
+                    <rect x="0.5" y="0.5" width="9" height="9" rx="1" />
+                </svg>
+            </button>
+
+            <button class="win-btn close" id="closeBtn" title="Close">
+                <!-- X -->
+                <svg viewBox="0 0 10 10" stroke-width="1.2">
+                    <line x1="1" y1="1" x2="9" y2="9" />
+                    <line x1="9" y1="1" x2="1" y2="9" />
+                </svg>
+            </button>
+        </div>
+    </div>
     <div class="app-container">
         <!-- Left Sidebar -->
         <div class="sidebar">
@@ -18,29 +47,37 @@
                     <div class="profile-name-container">
                         <div class="profile-name" id="profileName">Name</div>
                         <div class="edit-button" id="editButton">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89783 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path
+                                    d="M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89783 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
                             </svg>
                         </div>
                     </div>
                 </div>
                 <input type="text" class="name-input" id="nameInput" style="display: none;">
             </div>
-            
+
             <div class="divider"></div>
-            
+
             <div class="owned-items-section">
                 <h3>Owned Items</h3>
                 <div class="owned-items-list" id="ownedItemsList">
                     <!-- Owned items will be populated here -->
                 </div>
             </div>
-            
+
             <div class="menu-section">
                 <div class="menu-button" id="menuButton">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
                     </svg>
                 </div>
                 <div class="menu-dropdown" id="menuDropdown">
@@ -53,8 +90,8 @@
         <!-- Main Content -->
         <div class="main-content">
             <div class="header">
-                <h1 class="title">Title</h1>
-                
+                <h1 class="title">GAME ICON HUB</h1>
+
                 <div class="search-section">
                     <input type="text" class="search-bar" placeholder="Search a game" id="searchInput">
                     <button class="search-button" id="searchButton">Search</button>
@@ -69,4 +106,5 @@
 
     <script src="renderer.js"></script>
 </body>
+
 </html>
