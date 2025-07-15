@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Item Manager</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Left Sidebar -->
+        <div class="sidebar">
+            <div class="profile-section">
+                <div class="profile-picture">
+                    <span>PFP</span>
+                </div>
+                <div class="profile-name">Name</div>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <div class="owned-items-section">
+                <h3>Owned Items</h3>
+                <div class="owned-items-list" id="ownedItemsList">
+                    <!-- Owned items will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <h1 class="title">Title</h1>
+                
+                <div class="search-section">
+                    <input type="text" class="search-bar" placeholder="Searchbar" id="searchInput">
+                    <button class="search-button" id="searchButton">Search</button>
+                </div>
+            </div>
+
+            <div class="items-container" id="itemsContainer">
+                <!-- Items will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>
