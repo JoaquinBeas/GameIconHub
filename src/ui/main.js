@@ -9,7 +9,7 @@ function createWindow() {
             nodeIntegration: true,
             contextIsolation: false
         },
-        titleBarStyle: 'hiddenInset',
+        frame: false,
         backgroundColor: '#2d2d2d',
         show: false
     });

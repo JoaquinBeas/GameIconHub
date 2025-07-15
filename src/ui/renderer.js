@@ -66,6 +66,14 @@ const searchInput = document.getElementById('searchInput');
 const searchButton = document.getElementById('searchButton');
 const itemsContainer = document.getElementById('itemsContainer');
 const ownedItemsList = document.getElementById('ownedItemsList');
+const profileName = document.getElementById('profileName');
+const editButton = document.getElementById('editButton');
+const nameInput = document.getElementById('nameInput');
+const menuButton = document.getElementById('menuButton');
+const menuDropdown = document.getElementById('menuDropdown');
+
+let isEditingName = false;
+let menuHoverTimeout;
 
 // Initialize the app
 function init() {
@@ -85,6 +93,52 @@ function setupEventListeners() {
 
     // Real-time search as user types
     searchInput.addEventListener('input', handleSearch);
+
+    // Profile name editing
+    editButton.addEventListener('click', startEditingName);
+    nameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            finishEditingName();
+        } else if (e.key === 'Escape') {
+            cancelEditingName();
+        }
+    });
+    nameInput.addEventListener('blur', finishEditingName);
+
+    // Menu functionality
+    menuButton.addEventListener('click', toggleMenu);
+
+    // Menu hover functionality
+    menuButton.addEventListener('mouseenter', () => {
+        clearTimeout(menuHoverTimeout);
+        menuDropdown.classList.add('hover');
+    });
+
+    menuButton.addEventListener('mouseleave', () => {
+        menuHoverTimeout = setTimeout(() => {
+            if (!menuDropdown.matches(':hover')) {
+                menuDropdown.classList.remove('hover');
+            }
+        }, 200);
+    });
+
+    menuDropdown.addEventListener('mouseenter', () => {
+        clearTimeout(menuHoverTimeout);
+        menuDropdown.classList.add('hover');
+    });
+
+    menuDropdown.addEventListener('mouseleave', () => {
+        menuHoverTimeout = setTimeout(() => {
+            menuDropdown.classList.remove('hover');
+        }, 200);
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!menuButton.contains(e.target) && !menuDropdown.contains(e.target)) {
+            menuDropdown.classList.remove('show');
+        }
+    });
 }
 
 // Handle search functionality
@@ -206,6 +260,56 @@ function renderOwnedItems() {
 
         ownedItemsList.appendChild(ownedItem);
     });
+}
+
+// Profile name editing functions
+function startEditingName() {
+    if (isEditingName) return;
+
+    isEditingName = true;
+    const currentName = profileName.textContent;
+
+    nameInput.value = currentName;
+    nameInput.style.display = 'block';
+    profileName.style.display = 'none';
+    editButton.style.display = 'none';
+
+    nameInput.focus();
+    nameInput.select();
+}
+
+function finishEditingName() {
+    if (!isEditingName) return;
+
+    const newName = nameInput.value.trim();
+    if (newName && newName !== profileName.textContent) {
+        profileName.textContent = newName;
+    }
+
+    cancelEditingName();
+}
+
+function cancelEditingName() {
+    isEditingName = false;
+    nameInput.style.display = 'none';
+    profileName.style.display = 'block';
+    editButton.style.display = 'block';
+}
+
+// Menu functions
+function toggleMenu() {
+    menuDropdown.classList.toggle('show');
+    menuDropdown.classList.remove('hover');
+}
+
+function showContribute() {
+    alert('Contribute section - This would open a contribution page or modal');
+    menuDropdown.classList.remove('show');
+}
+
+function showContact() {
+    alert('Contact section - This would open contact information or modal');
+    menuDropdown.classList.remove('show');
 }
 
 // Initialize the app when DOM is loaded

@@ -11,10 +11,21 @@
         <!-- Left Sidebar -->
         <div class="sidebar">
             <div class="profile-section">
-                <div class="profile-picture">
-                    <span>PFP</span>
+                <div class="profile-container">
+                    <div class="profile-picture">
+                        <span>PFP</span>
+                    </div>
+                    <div class="profile-name-container">
+                        <div class="profile-name" id="profileName">Name</div>
+                        <div class="edit-button" id="editButton">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89783 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                    </div>
                 </div>
-                <div class="profile-name">Name</div>
+                <input type="text" class="name-input" id="nameInput" style="display: none;">
             </div>
             
             <div class="divider"></div>
@@ -25,6 +36,18 @@
                     <!-- Owned items will be populated here -->
                 </div>
             </div>
+            
+            <div class="menu-section">
+                <div class="menu-button" id="menuButton">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="menu-dropdown" id="menuDropdown">
+                    <div class="menu-item" onclick="showContribute()">Contribuir</div>
+                    <div class="menu-item" onclick="showContact()">Contacto</div>
+                </div>
+            </div>
         </div>
 
         <!-- Main Content -->
@@ -33,7 +56,7 @@
                 <h1 class="title">Title</h1>
                 
                 <div class="search-section">
-                    <input type="text" class="search-bar" placeholder="Searchbar" id="searchInput">
+                    <input type="text" class="search-bar" placeholder="Search a game" id="searchInput">
                     <button class="search-button" id="searchButton">Search</button>
                 </div>
             </div>
