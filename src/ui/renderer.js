@@ -92,6 +92,7 @@ function init() {
     renderItems();
     renderOwnedItems();
     setupEventListeners();
+    setupModalImageClick();
 }
 
 // Setup event listeners
@@ -393,6 +394,25 @@ function wireWindowButtons() {
 
     document.getElementById('closeBtn').addEventListener('click', () => {
         ipcRenderer.invoke('win-action', 'close');
+    });
+}
+function setupModalImageClick() {
+    document.getElementById('itemsContainer').addEventListener('click', function (e) {
+        const target = e.target;
+        if (target.classList.contains('item-picture')) {
+            const picture = target.innerText;
+            const modal = document.getElementById('modalOverlay');
+            const modalPic = document.getElementById('modalPicture');
+            modalPic.textContent = picture;
+            modal.style.display = 'flex';
+        }
+    });
+
+    // Cerrar modal al clickar fuera
+    document.getElementById('modalOverlay').addEventListener('click', function (e) {
+        if (e.target.id === 'modalOverlay') {
+            this.style.display = 'none';
+        }
     });
 }
 
