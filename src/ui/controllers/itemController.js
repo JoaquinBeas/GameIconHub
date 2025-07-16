@@ -49,10 +49,8 @@ export function sendToDesktop(button, itemId) {
 export function downloadItem(itemId) {
     const item = items.find(i => i.id === itemId);
     if (!item) return;
-
-    const card = document.querySelector(`.item-card button.Btn[onclick*="${itemId}"]`);
+    const card = document.querySelector(`.button.Btn[data-id="${itemId}"]`) || document.querySelector(`.Btn[data-id="${itemId}"]`);
     if (!card || card.classList.contains('completed')) return;
-
     card.classList.add('completed');
     const CHECK_SVG = `<svg class="svgIcon" viewBox="0 0 512 512" height="1em" xmlns="http://www.w3.org/2000/svg">
         <path d="M173.9 439.4L7 272c-9.4-9.4-9.4-24.6
