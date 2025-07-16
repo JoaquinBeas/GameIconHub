@@ -32,72 +32,59 @@ body {
 }
 
 .profile-section {
-    margin-bottom: 20px;
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.profile-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
+.profile-name-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 15px;
+  position: relative;
 }
 
-.profile-picture {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background-color: #ffffff;
-    color: #000000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 16px;
-}
-
-.profile-name-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    position: relative;
-}
 
 .profile-name {
-    font-size: 18px;
-    font-weight: 500;
-    text-align: center;
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+  letter-spacing: 0.5px;
 }
 
-.edit-button {
-    opacity: 0;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-    transition: opacity 0.2s, background-color 0.2s;
-    color: #cccccc;
+.profile-edit-btn {
+  display: block;
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
-.profile-name-container:hover .edit-button {
-    opacity: 1;
-}
-
-.edit-button:hover {
-    background-color: #4a4a4a;
-    color: #ffffff;
+.profile-name-wrapper:hover .profile-edit-btn {
+  opacity: 1;
 }
 
 .name-input {
-    background-color: #4a4a4a;
-    border: 1px solid #007aff;
-    border-radius: 4px;
-    padding: 4px 8px;
-    color: #ffffff;
-    font-size: 18px;
-    font-weight: 500;
-    text-align: center;
-    outline: none;
-    width: 120px;
+  font-size: 20px;             /* Igual que .profile-name */
+  font-weight: 600;
+  color: #fff;
+  background: transparent;
+  border: none;
+  /* border-bottom: 1px solid #555; */
+  text-align: center;
+  letter-spacing: 0.5px;
+  outline: none;
+  font-family: inherit;
+  width: auto;
+  padding: 4px;
 }
+
 
 .divider {
     height: 1px;

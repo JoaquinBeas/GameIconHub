@@ -6,6 +6,7 @@ function createWindow() {
     const mainWindow = new BrowserWindow({
         width: 1400,
         height: 900,
+        icon: path.join(__dirname, 'assets', 'app_icon_big.ico'),
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
