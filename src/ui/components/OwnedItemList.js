@@ -54,5 +54,39 @@ export function renderOwnedItems(items, filteredItems, renderItemsCallback) {
         div.appendChild(text);
         div.appendChild(btn);
         ownedItemsList.appendChild(div);
+        addTextView(text,item)
+    });
+}
+
+function addTextView(text,item) {
+    let tooltipTimeout;
+    text.addEventListener('mouseenter', function (e) {
+        // Solo si está cortado visualmente
+        if (this.scrollWidth > this.offsetWidth) {
+            tooltipTimeout = setTimeout(() => {
+                let tooltip = document.createElement('div');
+                tooltip.className = 'owned-tooltip-global show';
+                tooltip.textContent = item.name;
+
+                document.body.appendChild(tooltip);
+
+                // Posiciona el tooltip sobre el texto
+                const rect = this.getBoundingClientRect();
+                tooltip.style.left = `${rect.left + rect.width / 2 - tooltip.offsetWidth / 2}px`;
+                tooltip.style.top = `${rect.top - tooltip.offsetHeight - 8}px`;
+
+                // Corrige si se sale por los lados
+                const pad = 6;
+                if (rect.left + rect.width / 2 - tooltip.offsetWidth / 2 < 0)
+                    tooltip.style.left = pad + 'px';
+                if (rect.left + rect.width / 2 + tooltip.offsetWidth / 2 > window.innerWidth)
+                    tooltip.style.left = (window.innerWidth - tooltip.offsetWidth - pad) + 'px';
+
+            }, 300);
+        }
+    });
+    text.addEventListener('mouseleave', function (e) {
+        clearTimeout(tooltipTimeout);
+        document.querySelectorAll('.owned-tooltip-global').forEach(el => el.remove());
     });
 }
