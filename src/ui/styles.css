@@ -316,10 +316,15 @@ body {
 .owned-items-list::-webkit-scrollbar-thumb:hover {
     background: #6a6a6a;
 }
-.menu-section.dropdown-active .outer-cont {
-    transform: translateY(-105px);   /* ⇧ misma altura que en la regla .hover */
-    transition: transform 0.3s ease; /* suavidad */
-}
+/* .menu-section.dropdown-active .outer-cont {
+    transform: translateY(-105px);   
+    transition: transform 0.3s ease; 
+} */
+ .menu-section.dropdown-active .outer-cont {
+   transform: translateY(-105px);
+   /* o el valor que prefieras */
+   transition: transform 0.3s cubic-bezier(.25, .46, .45, .94);
+ }
 /* Menu Section */
 .menu-section {
     display: flex;
@@ -976,11 +981,11 @@ body {
   align-items: center;
   gap: 5px;
 }
-.menu-dropdown.show ~ .outer-cont,
+/* .menu-dropdown.show ~ .outer-cont,
 .menu-dropdown.hover ~ .outer-cont {
-    transform: translateY(-200px); /* Adjust this value based on your dropdown height */
+    transform: translateY(-200px); 
     transition: transform 0.3s ease;
-}
+} */
 .outer-cont {
     padding: 12px 20px;
     border: none;

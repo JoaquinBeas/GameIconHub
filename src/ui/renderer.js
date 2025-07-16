@@ -462,18 +462,20 @@ function setupMenuHoverWithAIMovement() {
     const menuSection = document.querySelector('.menu-section');
     const menuButton = document.getElementById('menuButton');
     const menuDropdown = document.getElementById('menuDropdown');
-    
+
     menuButton.addEventListener('mouseenter', () => {
         clearTimeout(menuHoverTimeout);
         menuDropdown.classList.add('hover');
-        menuSection.classList.add('dropdown-active'); // Move AI button up
+        menuSection.classList.add('dropdown-active'); // Sube el AI button
     });
 
     menuButton.addEventListener('mouseleave', () => {
         menuHoverTimeout = setTimeout(() => {
             if (!menuDropdown.matches(':hover')) {
                 menuDropdown.classList.remove('hover');
-                menuSection.classList.remove('dropdown-active'); // Move AI button back
+                if (!menuDropdown.classList.contains('show')) {
+                    menuSection.classList.remove('dropdown-active'); // Baja el AI button solo si no está abierto por click
+                }
             }
         }, 200);
     });
@@ -481,13 +483,36 @@ function setupMenuHoverWithAIMovement() {
     menuDropdown.addEventListener('mouseenter', () => {
         clearTimeout(menuHoverTimeout);
         menuDropdown.classList.add('hover');
-        menuSection.classList.add('dropdown-active'); // Keep AI button up
+        menuSection.classList.add('dropdown-active');
     });
 
     menuDropdown.addEventListener('mouseleave', () => {
         menuHoverTimeout = setTimeout(() => {
             menuDropdown.classList.remove('hover');
-            menuSection.classList.remove('dropdown-active'); // Move AI button back
+            if (!menuDropdown.classList.contains('show')) {
+                menuSection.classList.remove('dropdown-active');
+            }
         }, 200);
+    });
+
+    // --- NUEVO: click en menú hamburguesa ---
+    menuButton.addEventListener('click', () => {
+        // Toggle dropdown
+        menuDropdown.classList.toggle('show');
+        // SI el menú está abierto (show), mantenemos el AI button elevado
+        if (menuDropdown.classList.contains('show')) {
+            menuSection.classList.add('dropdown-active');
+        } else {
+            menuSection.classList.remove('dropdown-active');
+        }
+    });
+
+    // --- NUEVO: click fuera para cerrar dropdown y bajar AI button ---
+    document.addEventListener('click', (e) => {
+        if (!menuButton.contains(e.target) && !menuDropdown.contains(e.target)) {
+            menuDropdown.classList.remove('show');
+            menuDropdown.classList.remove('hover');
+            menuSection.classList.remove('dropdown-active'); // Baja el AI button si se hace click fuera
+        }
     });
 }
