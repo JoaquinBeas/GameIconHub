@@ -93,6 +93,7 @@ function init() {
     renderOwnedItems();
     setupEventListeners();
     setupModalImageClick();
+    setupMenuHoverWithAIMovement();
 }
 
 // Setup event listeners
@@ -103,7 +104,9 @@ function setupEventListeners() {
             handleSearch();
         }
     });
-
+    document.getElementById('aiButton').addEventListener('click', () => {
+        alert('Here would open Spacious AI!');
+    });
     // Real-time search as user types
     searchInput.addEventListener('input', handleSearch);
 
@@ -364,20 +367,55 @@ function downloadItem(id) {
 
 // Menu functions
 function toggleMenu() {
+    const menuSection = document.querySelector('.menu-section');
+    console.log('toggleMenu called');
+    console.log('menuSection found:', menuSection);
+    
     menuDropdown.classList.toggle('show');
     menuDropdown.classList.remove('hover');
+    
+    // Check if dropdown is now shown
+    if (menuDropdown.classList.contains('show')) {
+        console.log('Adding dropdown-active class');
+        menuSection.classList.add('dropdown-active');
+    } else {
+        console.log('Removing dropdown-active class');
+        menuSection.classList.remove('dropdown-active');
+    }
+    
+    // Debug: log current classes
+    console.log('menuSection classes:', menuSection.className);
+    console.log('menuDropdown classes:', menuDropdown.className);
 }
 
 function showContribute() {
+    const menuSection = document.querySelector('.menu-section');
     alert('Contribute section - This would open a contribution page or modal');
     menuDropdown.classList.remove('show');
+    menuSection.classList.remove('dropdown-active');
 }
 
 function showContact() {
+    const menuSection = document.querySelector('.menu-section');
     alert('Contact section - This would open contact information or modal');
     menuDropdown.classList.remove('show');
+    menuSection.classList.remove('dropdown-active');
 }
-
+document.addEventListener('click', (e) => {
+    const menuSection = document.querySelector('.menu-section');
+    if (!menuButton.contains(e.target) && !menuDropdown.contains(e.target)) {
+        console.log('Clicking outside - removing dropdown-active');
+        menuDropdown.classList.remove('show');
+        menuSection.classList.remove('dropdown-active');
+    }
+});
+document.addEventListener('click', (e) => {
+    const menuSection = document.querySelector('.menu-section');
+    if (!menuButton.contains(e.target) && !menuDropdown.contains(e.target)) {
+        menuDropdown.classList.remove('show');
+        menuSection.classList.remove('dropdown-active'); // Move AI button back
+    }
+});
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', init);
 
@@ -419,3 +457,37 @@ document.addEventListener('DOMContentLoaded', () => {
     init();
     wireWindowButtons();
 });
+
+function setupMenuHoverWithAIMovement() {
+    const menuSection = document.querySelector('.menu-section');
+    const menuButton = document.getElementById('menuButton');
+    const menuDropdown = document.getElementById('menuDropdown');
+    
+    menuButton.addEventListener('mouseenter', () => {
+        clearTimeout(menuHoverTimeout);
+        menuDropdown.classList.add('hover');
+        menuSection.classList.add('dropdown-active'); // Move AI button up
+    });
+
+    menuButton.addEventListener('mouseleave', () => {
+        menuHoverTimeout = setTimeout(() => {
+            if (!menuDropdown.matches(':hover')) {
+                menuDropdown.classList.remove('hover');
+                menuSection.classList.remove('dropdown-active'); // Move AI button back
+            }
+        }, 200);
+    });
+
+    menuDropdown.addEventListener('mouseenter', () => {
+        clearTimeout(menuHoverTimeout);
+        menuDropdown.classList.add('hover');
+        menuSection.classList.add('dropdown-active'); // Keep AI button up
+    });
+
+    menuDropdown.addEventListener('mouseleave', () => {
+        menuHoverTimeout = setTimeout(() => {
+            menuDropdown.classList.remove('hover');
+            menuSection.classList.remove('dropdown-active'); // Move AI button back
+        }, 200);
+    });
+}

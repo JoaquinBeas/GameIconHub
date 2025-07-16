@@ -316,13 +316,24 @@ body {
 .owned-items-list::-webkit-scrollbar-thumb:hover {
     background: #6a6a6a;
 }
-
+.menu-section.dropdown-active .outer-cont {
+    transform: translateY(-105px);   /* ⇧ misma altura que en la regla .hover */
+    transition: transform 0.3s ease; /* suavidad */
+}
 /* Menu Section */
 .menu-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;          /* separación visual entre AI y hamburguesa */
     margin-top: auto;
     position: relative;
 }
 
+/* Opcional: ajusta ancho para que encaje al 100 % */
+.menu-section > .outer-cont,
+.menu-section > .menu-button {
+    width: 100%;
+}
 .menu-button {
     width: 100%;
     min-width: 100%;
@@ -357,8 +368,8 @@ body {
     transform: translateY(10px);
     transition: all 0.3s ease;
     border: 1px solid #5a5a5a;
+    z-index: 10; /* Ensure dropdown is above other elements */
 }
-
 .menu-dropdown.show {
     opacity: 1;
     visibility: visible;
@@ -959,3 +970,62 @@ body {
 .searchButton svg {
     stroke: white;
 }
+
+.flex {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.menu-dropdown.show ~ .outer-cont,
+.menu-dropdown.hover ~ .outer-cont {
+    transform: translateY(-200px); /* Adjust this value based on your dropdown height */
+    transition: transform 0.3s ease;
+}
+.outer-cont {
+    padding: 12px 20px;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    position: relative;
+    background: linear-gradient(40deg, #5bfcc4, #f593e4, #71a4f0);
+    border-radius: 12px;
+    color: #fff;
+    transition: all 0.3s ease, transform 0.3s ease; /* Added transform transition */
+    box-shadow:
+        inset 0px 0px 5px #ffffffa9,
+        inset 0px 35px 30px #000,
+        0px 5px 10px #000000cc;
+    text-shadow: 1px 1px 1px #000;
+}
+.outer-cont::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  border-radius: 12px;
+  filter: blur(0);
+  z-index: -1;
+  box-shadow: none;
+  background: conic-gradient(
+    #00000000 80deg,
+    #40baf7,
+    #f34ad7,
+    #5bfcc4,
+    #00000000 280deg
+  );
+  transition: all 0.3s ease;
+}
+.outer-cont:hover::before {
+  filter: blur(15px);
+}
+.outer-cont:active::before {
+  filter: blur(5px);
+  transform: translateY(1px);
+}
+.outer-cont:active {
+  box-shadow:
+    inset 0px 0px 5px #ffffffa9,
+    inset 0px 35px 30px #000;
+  margin-top: 3px;
+}
+
