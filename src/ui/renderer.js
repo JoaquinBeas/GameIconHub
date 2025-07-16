@@ -2,7 +2,7 @@
 const sampleItems = [
     {
         id: 1,
-        name: "Wireless Headphones",
+        name: "Wireless Headphones with noise cancellation and 30",
         description: "High-quality wireless headphones with noise cancellation and 30-hour battery life",
         picture: "🎧",
         owned: false
@@ -238,7 +238,19 @@ function sendToDesktop(button, itemId) {
     button.classList.add('sent');
     const text = button.querySelector('.text');
     if (text) text.innerHTML = 'Sent ✔️';
+
+    // --- NUEVO: Marcar como owned y refrescar barra lateral ---
+    if (!item.owned) {
+        item.owned = true;
+
+        // También actualiza en el array filtrado si aplica
+        const filteredItem = filteredItems.find(i => i.id === itemId);
+        if (filteredItem) filteredItem.owned = true;
+
+        renderOwnedItems();
+    }
 }
+
 
 
 // Toggle item between owned and not owned
@@ -284,15 +296,19 @@ function renderOwnedItems() {
     ownedItems.forEach(item => {
         const ownedItem = document.createElement('div');
         ownedItem.className = 'owned-item';
-        ownedItem.innerHTML = `${item.picture} ${item.name}`;
+        ownedItem.style.display = 'flex';
+        ownedItem.style.alignItems = 'center';
+        ownedItem.style.justifyContent = 'space-between';
 
-        // Add click handler to scroll to item in main list
-        ownedItem.addEventListener('click', () => {
-            // Clear search to show all items
+        // --- Texto del item ---
+        const textSpan = document.createElement('span');
+        textSpan.textContent = `${item.picture} ${item.name}`;
+        textSpan.style.flex = '1';
+        textSpan.style.cursor = 'pointer';
+        textSpan.onclick = () => {
             searchInput.value = '';
             handleSearch();
 
-            // Scroll to the item
             setTimeout(() => {
                 const itemCards = document.querySelectorAll('.item-card');
                 const targetCard = Array.from(itemCards).find(card => {
@@ -302,15 +318,94 @@ function renderOwnedItems() {
 
                 if (targetCard) {
                     targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    targetCard.style.borderColor = '#007aff';
+                    targetCard.style.borderColor = '#965EFF';
                     setTimeout(() => {
                         targetCard.style.borderColor = '#4a4a4a';
                     }, 2000);
                 }
             }, 100);
+        };
+
+        // --- Botón borrar (derecha, SVG trash) ---
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'owned-delete-btn';
+        deleteBtn.title = 'Quitar de la lista';
+        deleteBtn.innerHTML = `
+      <svg
+        class="lucide lucide-trash-2"
+        stroke-linejoin="round"
+        stroke-linecap="round"
+        stroke-width="2"
+        stroke="#7e8590"
+        fill="none"
+        viewBox="0 0 24 24"
+        height="22"
+        width="22"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path d="M3 6h18"></path>
+        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+        <line y2="17" y1="11" x2="10" x1="10"></line>
+        <line y2="17" y1="11" x2="14" x1="14"></line>
+      </svg>
+    `;
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            item.owned = false;
+            // También actualiza en filteredItems si aplica
+            const filteredItem = filteredItems.find(i => i.id === item.id);
+            if (filteredItem) filteredItem.owned = false;
+            renderOwnedItems();
+            renderItems();
+        };
+
+        ownedItem.appendChild(textSpan);
+        ownedItem.appendChild(deleteBtn);
+        ownedItemsList.appendChild(ownedItem);
+
+        textSpan.textContent = `${item.picture} ${item.name}`;
+        textSpan.style.flex = '1';
+        textSpan.style.overflow = 'hidden';
+        textSpan.style.textOverflow = 'ellipsis';
+        textSpan.style.whiteSpace = 'nowrap';
+        textSpan.style.minWidth = '0';
+        textSpan.style.maxWidth = '195px';
+        textSpan.style.display = 'block';
+        textSpan.style.position = 'relative';
+        textSpan.title = '';
+
+        let tooltipTimeout;
+        textSpan.addEventListener('mouseenter', function (e) {
+            // Solo si está cortado visualmente
+            if (this.scrollWidth > this.offsetWidth) {
+                tooltipTimeout = setTimeout(() => {
+                    let tooltip = document.createElement('div');
+                    tooltip.className = 'owned-tooltip-global show';
+                    tooltip.textContent = item.name;
+
+                    document.body.appendChild(tooltip);
+
+                    // Posiciona el tooltip sobre el texto
+                    const rect = this.getBoundingClientRect();
+                    tooltip.style.left = `${rect.left + rect.width / 2 - tooltip.offsetWidth / 2}px`;
+                    tooltip.style.top = `${rect.top - tooltip.offsetHeight - 8}px`;
+
+                    // Corrige si se sale por los lados
+                    const pad = 6;
+                    if (rect.left + rect.width / 2 - tooltip.offsetWidth / 2 < 0)
+                        tooltip.style.left = pad + 'px';
+                    if (rect.left + rect.width / 2 + tooltip.offsetWidth / 2 > window.innerWidth)
+                        tooltip.style.left = (window.innerWidth - tooltip.offsetWidth - pad) + 'px';
+
+                }, 300);
+            }
+        });
+        textSpan.addEventListener('mouseleave', function (e) {
+            clearTimeout(tooltipTimeout);
+            document.querySelectorAll('.owned-tooltip-global').forEach(el => el.remove());
         });
 
-        ownedItemsList.appendChild(ownedItem);
     });
 }
 
@@ -370,10 +465,10 @@ function toggleMenu() {
     const menuSection = document.querySelector('.menu-section');
     console.log('toggleMenu called');
     console.log('menuSection found:', menuSection);
-    
+
     menuDropdown.classList.toggle('show');
     menuDropdown.classList.remove('hover');
-    
+
     // Check if dropdown is now shown
     if (menuDropdown.classList.contains('show')) {
         console.log('Adding dropdown-active class');
@@ -382,7 +477,7 @@ function toggleMenu() {
         console.log('Removing dropdown-active class');
         menuSection.classList.remove('dropdown-active');
     }
-    
+
     // Debug: log current classes
     console.log('menuSection classes:', menuSection.className);
     console.log('menuDropdown classes:', menuDropdown.className);

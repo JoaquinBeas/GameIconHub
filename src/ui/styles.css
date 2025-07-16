@@ -120,14 +120,58 @@ body {
 }
 
 .owned-item {
-    padding: 8px 12px;
-    background-color: #4a4a4a;
-    border-radius: 6px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: #4a4a4a;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-bottom: 2px;
+  max-width: 100%;
+  min-width: 0;
+  position: relative;
+  /* ↑ min-width:0 es clave para flex con ellipsis */
+}
+.owned-tooltip-global {
+  position: fixed;
+  left: 0;
+  top: 0;
+  background: #fff;
+  color: #000000;
+  padding: 7px 18px;
+  /* border-radius: 6px; */
+  font-size: 12px;
+  font-weight: 400;
+  white-space: pre-line;
+  box-shadow: 0 6px 28px 2px #00000022, 0 1.5px 5px 0px #0002;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s;
+  max-width: 500px;
+  text-align: left;
+  border: 1px solid #ececec;
+  letter-spacing: .02em;
+  line-height: 1.25;
 }
 
+.owned-tooltip-global.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+.owned-item span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  max-width: 195px;
+  /* Ajusta según el ancho del sidebar y el botón trash */
+  display: block;
+}
 .owned-item:hover {
     background-color: #5a5a5a;
 }
@@ -1034,3 +1078,44 @@ body {
   margin-top: 3px;
 }
 
+
+
+.owned-delete-btn {
+  background: none;
+  border: none;
+  opacity: 1;
+  margin-left: 8px;
+  padding: 2px 3px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.1s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.owned-item:hover .owned-delete-btn {
+  opacity: 1;
+  background: rgba(150, 94, 255, 0.13);
+  /* Morado suave, tema app */
+  box-shadow: 0 2px 8px rgba(150, 94, 255, 0.08);
+}
+
+.owned-delete-btn:hover,
+.owned-delete-btn:focus {
+  background: rgba(150, 94, 255, 0.26);
+  /* Morado más fuerte */
+  outline: none;
+}
+
+.owned-delete-btn svg {
+  stroke: #965EFF;
+  /* Morado principal tema app */
+  transition: stroke 0.2s;
+}
+
+.owned-delete-btn:hover svg,
+.owned-delete-btn:focus svg {
+  stroke: #fff;
+  filter: drop-shadow(0 0 3px #965EFF99);
+}
