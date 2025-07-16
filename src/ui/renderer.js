@@ -300,60 +300,37 @@ function renderOwnedItems() {
         ownedItem.style.alignItems = 'center';
         ownedItem.style.justifyContent = 'space-between';
 
-        // --- Texto del item ---
+        // Texto del ítem
         const textSpan = document.createElement('span');
         textSpan.textContent = `${item.picture} ${item.name}`;
         textSpan.style.flex = '1';
         textSpan.style.cursor = 'pointer';
-        textSpan.onclick = () => {
-            searchInput.value = '';
-            handleSearch();
 
-            setTimeout(() => {
-                const itemCards = document.querySelectorAll('.item-card');
-                const targetCard = Array.from(itemCards).find(card => {
-                    const nameElement = card.querySelector('.item-name');
-                    return nameElement && nameElement.textContent === item.name;
-                });
-
-                if (targetCard) {
-                    targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    targetCard.style.borderColor = '#965EFF';
-                    setTimeout(() => {
-                        targetCard.style.borderColor = '#4a4a4a';
-                    }, 2000);
-                }
-            }, 100);
+        // Clic derecho para abrir card contextual
+        ownedItem.oncontextmenu = (e) => {
+            e.preventDefault();
+            openItemCard(item, e.clientX, e.clientY);
         };
-
-        // --- Botón borrar (derecha, SVG trash) ---
+        // textSpan.oncontextmenu = (e) => {
+        //     e.preventDefault();
+        //     openItemCard(item, e.clientX, e.clientY);
+        // };
+        // Botón de borrar
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'owned-delete-btn';
         deleteBtn.title = 'Quitar de la lista';
         deleteBtn.innerHTML = `
-      <svg
-        class="lucide lucide-trash-2"
-        stroke-linejoin="round"
-        stroke-linecap="round"
-        stroke-width="2"
-        stroke="#7e8590"
-        fill="none"
-        viewBox="0 0 24 24"
-        height="22"
-        width="22"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path d="M3 6h18"></path>
-        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-        <line y2="17" y1="11" x2="10" x1="10"></line>
-        <line y2="17" y1="11" x2="14" x1="14"></line>
-      </svg>
-    `;
+          <svg class="lucide lucide-trash-2" stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="#7e8590" fill="none" viewBox="0 0 24 24" height="22" width="22">
+            <path d="M3 6h18"></path>
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+            <line y2="17" y1="11" x2="10" x1="10"></line>
+            <line y2="17" y1="11" x2="14" x1="14"></line>
+          </svg>`;
+
         deleteBtn.onclick = (e) => {
             e.stopPropagation();
             item.owned = false;
-            // También actualiza en filteredItems si aplica
             const filteredItem = filteredItems.find(i => i.id === item.id);
             if (filteredItem) filteredItem.owned = false;
             renderOwnedItems();
@@ -363,51 +340,9 @@ function renderOwnedItems() {
         ownedItem.appendChild(textSpan);
         ownedItem.appendChild(deleteBtn);
         ownedItemsList.appendChild(ownedItem);
-
-        textSpan.textContent = `${item.picture} ${item.name}`;
-        textSpan.style.flex = '1';
-        textSpan.style.overflow = 'hidden';
-        textSpan.style.textOverflow = 'ellipsis';
-        textSpan.style.whiteSpace = 'nowrap';
-        textSpan.style.minWidth = '0';
-        textSpan.style.maxWidth = '195px';
-        textSpan.style.display = 'block';
-        textSpan.style.position = 'relative';
-        textSpan.title = '';
-
-        let tooltipTimeout;
-        textSpan.addEventListener('mouseenter', function (e) {
-            // Solo si está cortado visualmente
-            if (this.scrollWidth > this.offsetWidth) {
-                tooltipTimeout = setTimeout(() => {
-                    let tooltip = document.createElement('div');
-                    tooltip.className = 'owned-tooltip-global show';
-                    tooltip.textContent = item.name;
-
-                    document.body.appendChild(tooltip);
-
-                    // Posiciona el tooltip sobre el texto
-                    const rect = this.getBoundingClientRect();
-                    tooltip.style.left = `${rect.left + rect.width / 2 - tooltip.offsetWidth / 2}px`;
-                    tooltip.style.top = `${rect.top - tooltip.offsetHeight - 8}px`;
-
-                    // Corrige si se sale por los lados
-                    const pad = 6;
-                    if (rect.left + rect.width / 2 - tooltip.offsetWidth / 2 < 0)
-                        tooltip.style.left = pad + 'px';
-                    if (rect.left + rect.width / 2 + tooltip.offsetWidth / 2 > window.innerWidth)
-                        tooltip.style.left = (window.innerWidth - tooltip.offsetWidth - pad) + 'px';
-
-                }, 300);
-            }
-        });
-        textSpan.addEventListener('mouseleave', function (e) {
-            clearTimeout(tooltipTimeout);
-            document.querySelectorAll('.owned-tooltip-global').forEach(el => el.remove());
-        });
-
     });
 }
+
 
 // Profile name editing functions
 function startEditingName() {
@@ -610,4 +545,69 @@ function setupMenuHoverWithAIMovement() {
             menuSection.classList.remove('dropdown-active'); // Baja el AI button si se hace click fuera
         }
     });
+}function openItemCard(item, x, y) {
+    const existing = document.querySelector('.card');
+    if (existing) existing.remove();
+
+    const card = document.createElement('div');
+    card.className = 'card';
+card.innerHTML = `
+      <ul class="list" style="--color:#5353ff;--hover-storke:#fff; --hover-color:#fff">
+        <li class="element">
+          <label for="rename">
+            <input type="radio" id="rename" name="filed" checked />
+            <svg class="lucide lucide-pencil" stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="#7e8590" fill="none" viewBox="0 0 24 24" height="25" width="25" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path>
+              <path d="m15 5 4 4"></path>
+            </svg> Rename
+          </label>
+        </li>
+        <li class="element">
+          <label for="share">
+            <input type="radio" id="share" name="filed" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7e8590" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-round-plus">
+              <path d="M2 21a8 8 0 0 1 13.292-6"></path>
+              <circle cx="10" cy="8" r="5"></circle>
+              <path d="M19 16v6"></path>
+              <path d="M22 19h-6"></path>
+            </svg> Share
+          </label>
+        </li>
+        <div class="separator"></div>
+        <li class="element">
+          <label for="go to properties">
+            <input type="radio" id="Properties" name="filed" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7e8590" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings">
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg> Properties
+          </label>
+        </li>
+        <li class="element delete">
+          <label for="delete">
+            <input type="radio" id="delete" name="filed" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7e8590" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2">
+              <path d="M3 6h18"></path>
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+              <line x1="10" x2="10" y1="11" y2="17"></line>
+              <line x1="14" x2="14" y1="11" y2="17"></line>
+            </svg> Delete
+          </label>
+        </li>
+      </ul>`;
+    document.body.appendChild(card);
+
+    // Posición dinámica cerca del puntero
+    card.style.position = 'fixed';
+    card.style.top = `${y}px`;
+    card.style.left = `${x}px`;
+    card.style.zIndex = '99999';
+
+    // Cierra si haces click fuera
+    setTimeout(() => {
+        document.addEventListener('click', (e) => {
+            if (!card.contains(e.target)) card.remove();
+        }, { once: true });
+    }, 10);
 }
