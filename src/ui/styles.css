@@ -251,7 +251,7 @@ body {
 	border-radius: 4px;
 }
 .item-picture:hover{
-	transform: scale(1.6);
+	transform: scale(1.4);
 	/* 60 % más grande */
 	z-index: 0;
 	/* que quede por encima */
