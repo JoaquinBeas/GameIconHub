@@ -27,8 +27,6 @@ export function renderOwnedItems(items, filteredItems, renderItemsCallback) {
         text.textContent = `${item.picture} ${item.name}`;
         text.style.flex = '1';
         text.style.cursor = 'pointer';
-        debugger;
-        console.log("1241")
         div.oncontextmenu = (e) => {
             e.preventDefault();
             openItemCard(item, e.clientX, e.clientY);
@@ -97,9 +95,6 @@ function addTextView(text, item) {
     });
 }
 function openItemCard(item, x, y) {
-    console.log("hola");
-
-    debugger;
     const existing = document.querySelector('.card');
     if (existing) existing.remove();
 
@@ -157,8 +152,7 @@ function openItemCard(item, x, y) {
     card.style.top = `${y}px`;
     card.style.left = `${x}px`;
     card.style.zIndex = '99999';
-    console.log("hola");
-    debugger;
+
     // Cierra si haces click fuera
     setTimeout(() => {
         document.addEventListener('click', (e) => {
