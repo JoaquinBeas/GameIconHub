@@ -1,10 +1,15 @@
 # response_cleaner.py
 
 from io import BytesIO
+import json
 from tkinter import Image
 from typing import List, Literal
 from bs4 import BeautifulSoup
-from backend.models.SearchResult import SearchResult
+# from backend.models.SearchResult import PriceInfo, SearchResult
+# from backend.models.SearchEntry import SearchEntry
+# from backend.models.SuggestionEntry import Suggestion
+# from backend.steam_service import SteamService
+from backend.models.SearchResult import PriceInfo, SearchResult
 from backend.models.SearchEntry import SearchEntry
 from backend.models.SuggestionEntry import Suggestion
 from backend.steam_service import SteamService
@@ -12,30 +17,36 @@ from backend.steam_service import SteamService
 
 class ResponseCleaner:
     
-    def clean_suggestions(response: str) -> List[Suggestion]:
+    def clean_suggestions(self, response: str) -> List[Suggestion]:
         """Parsea el fragmento HTML y devuelve una lista de Suggestion."""
         soup = BeautifulSoup(response, "html.parser")
         results: list[Suggestion] = []
 
         for a in soup.select("a.match"):
-            kind: Literal["app", "creator"] = (
-                "creator" if "match_creator" in a["class"] else "app"
-            )
-            suggestion = Suggestion(
+            kind = "app" if "match_app" in a.get("class", []) else "creator"
+            name_tag = a.select_one(".match_name")
+            img_tag = a.select_one(".match_img img")
+            subtitle_tag = a.select_one(".match_subtitle")
+            results.append(
+            Suggestion(
                 type=kind,
                 url=a.get("href", ""),
-                name=(a.select_one(".match_name") or "").get_text(strip=True),
-                img=(a.select_one(".match_img img") or {}).get("src"),
-                subtitle=(a.select_one(".match_subtitle") or "").get_text(strip=True),
+                name=name_tag.get_text(strip=True) if name_tag else "",
+                img=img_tag.get("src") if img_tag else None,
+                subtitle=subtitle_tag.get_text(strip=True) if subtitle_tag else ""
             )
-            results.append(suggestion)
+        )
 
         return results
     
-    def clean_paginated_search(self, response) -> List[SearchEntry]:
+    def clean_paginated_search(self, response_str) -> List[SearchEntry]:
+        response = json.loads(response_str)
         html = response.get("results_html", "")
+
+        # Ahora sí, parsea el HTML
         soup = BeautifulSoup(html, "html.parser")
         rows = soup.select("a.search_result_row")
+        print("rows", rows)  # Esto ya no debería ser []
         entries: list[SearchEntry] = []
 
         for row in rows:
@@ -50,8 +61,8 @@ class ResponseCleaner:
                 "img": (row.select_one(".search_capsule img") or {}).get("src", ""),
                 "price": (row.select_one(".discount_final_price") or
                         row.select_one(".includes_games_results") or
-                        row.select_one(".discount_final_price.free") or "").get_text(strip=True),
-                "release": (row.select_one(".search_released") or "").get_text(strip=True),
+                        row.select_one(".discount_final_price.free") or ""),
+                "release": (row.select_one(".search_released") or ""),
                 "review_class": (row.select_one(".search_review_summary") or {}).get("class", [""])[-1],
                 "review_text": (row.select_one(".search_review_summary") or {}).get("data-tooltip-html", ""),
                 "platforms": [p["class"][1] for p in row.select(".platform_img") if len(p["class"]) > 1],
@@ -127,7 +138,7 @@ class ResponseCleaner:
         div = soup.select_one("div.apphub_AppIcon > img[src]")
         return div["src"] if div else None
     
-    def transform_into_icon(response: bytes, size: tuple[int, int] = (64, 64)) -> None:
+    def transform_into_icon(self, response: bytes, size: tuple[int, int] = (64, 64)) -> None:
 
         with Image.open(BytesIO(response)) as img:
             # Convert to RGBA in case it's not (for .ico support)
@@ -135,7 +146,7 @@ class ResponseCleaner:
             img = img.resize(size, Image.LANCZOS)
             return img
 
-    def _parse_price(col_price) -> SearchResult.PriceInfo:
+    def _parse_price(self, col_price) -> PriceInfo:
         """
         Extrae precio final, original y descuento de la columna .search_price_discount_combined
         """

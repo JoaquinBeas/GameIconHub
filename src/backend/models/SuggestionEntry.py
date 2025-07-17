@@ -1,6 +1,7 @@
-from typing import Literal
+from dataclasses import dataclass
+from typing import Optional, Literal
 
-
+@dataclass
 class Suggestion:
     """
     Representa una entrada devuelta por /search/suggest.
@@ -8,5 +9,5 @@ class Suggestion:
     type: Literal["app", "creator"]
     url: str
     name: str
-    img: str | None
-    subtitle: str  # precio, “Free”, “38 games”, …
+    img: Optional[str]
+    subtitle: str

@@ -1,8 +1,11 @@
 # steam_controller.py
 from fastapi import FastAPI, Query, Path, Response, HTTPException
 from fastapi.responses import StreamingResponse
-from backend.utils.response_cleaner import ResponseCleaner
+import uvicorn
+# from backend.steam_service import SteamService
+# from backend.utils.response_cleaner import ResponseCleaner
 from steam_service import SteamService
+from utils.response_cleaner import ResponseCleaner
 
 app = FastAPI(
     title="Steam Service API",
@@ -56,3 +59,6 @@ async def get_app_image(
         raise HTTPException(status_code=404, detail="Imagen no encontrada")
     response = StreamingResponse(iter([image_bytes]), media_type="image/jpeg")
     return response_cleaner.transform_into_icon(response)
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
