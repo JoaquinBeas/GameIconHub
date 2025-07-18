@@ -3,7 +3,8 @@ import requests
 
 class SteamService():
     
-    BASE_URL = "https://store.steampowered.com"
+    STEAM_BASE_URL = "https://store.steampowered.com"
+    STEAMDB_BASE_URL = "https://steamdb.info"
     lenguage = "spanish"
     locale = "ES"
     
@@ -12,7 +13,7 @@ class SteamService():
         self.locale = locale
         
     def suggest_search(self, term):
-        url = f"{self.BASE_URL}/search/suggest"
+        url = f"{self.STEAM_BASE_URL}/search/suggest"
         params = {
             "term": term,
             "f": "games",
@@ -29,7 +30,7 @@ class SteamService():
         return response.text
 
     def paginated_search(self, term, start=50, count=50):
-        url = f"{self.BASE_URL}/search/results/"
+        url = f"{self.STEAM_BASE_URL}/search/results/"
         params = {
             "query": "",
             "start": start,
@@ -45,7 +46,7 @@ class SteamService():
         return response.text
 
     def infinite_search(self, term):
-        url = f"{self.BASE_URL}/search/results"
+        url = f"{self.STEAM_BASE_URL}/search/results"
         params = {
             "term": term,
             "force_infinite": "1",
@@ -56,9 +57,26 @@ class SteamService():
         response = requests.get(url, params=params)
         return response.text
 
-    def get_app_page(self, app_id, app_name):
-        url = f"{self.BASE_URL}/app/{app_id}/{app_name}/"
-        response = requests.get(url)
+    def get_app_page(self, app_id):
+        url = f"{self.STEAMDB_BASE_URL}/app/{app_id}/info/"
+        headers = {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "Accept-Encoding": "gzip, deflate, br, zstd",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Cache-Control": "max-age=0",
+            "Cookie": "cf_clearance=v9EWgYdlB0u_zbfKM0p_PxXQ0drQuTzgvnY7HQ85jJ0-1752839502-1.2.1.1-GMLSAZY_SvM4YENOQC2UEgxQmKZhkzgHWF33LuhPUDC4O.cKYvyM7A5irauSqlqb1Q_wiu0IJGrNmLZNdqT5JYMy5JzS4gmvVEbQ6pETsL5gqWHWvHZrh..Qb2W7PFYnzm_Gt55_0S8COKGiG3csJvCdXwgKeV71o_FlZ1nGDOvUgfuB1DdmMJaOj7H9LVSuFxT3Ns90tP5zIwjIbDokl2VSjvrcN8Be9acaMHq934Y",  # recorta el valor según tu necesidad real
+            "Priority": "u=0, i",
+            "Sec-Ch-Ua": '"Not;A Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
+            "Sec-Ch-Ua-Mobile": "?0",
+            "Sec-Ch-Ua-Platform": '"Windows"',
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Sec-Fetch-User": "?1",
+            "Upgrade-Insecure-Requests": "1",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+        }
+        response = requests.get(url, headers=headers)
         return response.text
 
     def get_app_image(self, app_id, image_hash):

@@ -130,11 +130,11 @@ class ResponseCleaner:
             )
         return results
 
-    def extract_icon_url(self, response):
+    def extract_icon_url(self,response):
         soup = BeautifulSoup(response, "html.parser")
-
-        div = soup.select_one("div.apphub_AppIcon > img[src]")
-        return div["src"] if div else None
+        # Find the first <img> tag whose 'src' attribute contains "clienticon"
+        img = soup.find("td", src=lambda s: s and "clienticon" in s)
+        return img["src"] if img else None
     
     def transform_into_icon(self, response: bytes, size: tuple[int, int] = (64, 64)):
             with Image.open(BytesIO(response)) as img:

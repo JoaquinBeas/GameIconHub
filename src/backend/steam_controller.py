@@ -37,13 +37,11 @@ async def infinite_search(term: str = Query(...)):
     return response_cleaner.clean_infinite_search(response)
 
 # ---------- 4. Página de una app ----------
-@app.get("/app/{app_id}")
-async def get_app_page(
-    app_id: str = Path(...),
-    app_name: str | None = Query(None)
+@app.get("/app_icon_url/{app_id}")
+async def get_app_icon_url(
+    app_id: str = Path(...)
 ):
-    app_name = app_name or ""
-    response = steam.get_app_page(app_id, app_name)
+    response = steam.get_app_page(app_id)
     return response
     return response_cleaner.extract_icon_url(response)
 
