@@ -2,13 +2,10 @@
 
 from io import BytesIO
 import json
-from tkinter import Image
+import re
+from PIL import Image
 from typing import List, Literal
 from bs4 import BeautifulSoup
-# from backend.models.SearchResult import PriceInfo, SearchResult
-# from backend.models.SearchEntry import SearchEntry
-# from backend.models.SuggestionEntry import Suggestion
-# from backend.steam_service import SteamService
 from backend.models.SearchResult import PriceInfo, SearchResult
 from backend.models.SearchEntry import SearchEntry
 from backend.models.SuggestionEntry import Suggestion
@@ -42,11 +39,9 @@ class ResponseCleaner:
     def clean_paginated_search(self, response_str) -> List[SearchEntry]:
         response = json.loads(response_str)
         html = response.get("results_html", "")
-
         # Ahora sí, parsea el HTML
         soup = BeautifulSoup(html, "html.parser")
         rows = soup.select("a.search_result_row")
-        print("rows", rows)  # Esto ya no debería ser []
         entries: list[SearchEntry] = []
 
         for row in rows:
@@ -59,10 +54,14 @@ class ResponseCleaner:
                 "url": row.get("href", ""),
                 "name": (row.select_one(".title") or "").get_text(strip=True),
                 "img": (row.select_one(".search_capsule img") or {}).get("src", ""),
-                "price": (row.select_one(".discount_final_price") or
+                "price": ((row.select_one(".discount_final_price") or
                         row.select_one(".includes_games_results") or
-                        row.select_one(".discount_final_price.free") or ""),
-                "release": (row.select_one(".search_released") or ""),
+                        row.select_one(".discount_final_price.free") or None)
+                        and (row.select_one(".discount_final_price") or
+                            row.select_one(".includes_games_results") or
+                            row.select_one(".discount_final_price.free")).get_text(strip=True)
+                        or ""),
+                "release": (row.select_one(".search_released") or None) and row.select_one(".search_released").get_text(strip=True) or "",
                 "review_class": (row.select_one(".search_review_summary") or {}).get("class", [""])[-1],
                 "review_text": (row.select_one(".search_review_summary") or {}).get("data-tooltip-html", ""),
                 "platforms": [p["class"][1] for p in row.select(".platform_img") if len(p["class"]) > 1],
@@ -77,7 +76,6 @@ class ResponseCleaner:
                 entry["extra"]["bundle_items"] = row.get("data-ds-bundle-data")
 
             entries.append(entry)
-
         return entries
     
     def clean_infinite_search(self, response) -> List[SearchResult]:
@@ -138,13 +136,14 @@ class ResponseCleaner:
         div = soup.select_one("div.apphub_AppIcon > img[src]")
         return div["src"] if div else None
     
-    def transform_into_icon(self, response: bytes, size: tuple[int, int] = (64, 64)) -> None:
-
-        with Image.open(BytesIO(response)) as img:
-            # Convert to RGBA in case it's not (for .ico support)
-            img = img.convert("RGBA")
-            img = img.resize(size, Image.LANCZOS)
-            return img
+    def transform_into_icon(self, response: bytes, size: tuple[int, int] = (64, 64)):
+            with Image.open(BytesIO(response)) as img:
+                img = img.convert("RGBA")
+                img = img.resize(size, Image.LANCZOS)
+                output = BytesIO()
+                img.save(output, format="PNG")
+                output.seek(0)
+                return output
 
     def _parse_price(self, col_price) -> PriceInfo:
         """
@@ -158,7 +157,13 @@ class ResponseCleaner:
 
         # % de descuento (si existe un div .discount_pct o .bundle_base_discount)
         pct_div = col_price.select_one(".discount_pct, .bundle_base_discount")
-        discount_pct = int(pct_div.get_text(strip=True).lstrip("-%")) if pct_div else 0
+        if pct_div:
+            pct_text = pct_div.get_text(strip=True)
+            match = re.search(r'\d+', pct_text)
+            discount_pct = int(match.group()) if match else 0
+        else:
+            discount_pct = 0
+
 
         # precio original si hay rebaja
         orig_div = col_price.select_one(".discount_original_price")
@@ -167,4 +172,4 @@ class ResponseCleaner:
         except (KeyError, ValueError):
             original = None
 
-        return SearchResult.PriceInfo(final=final, original=original, discount_pct=discount_pct)
+        return PriceInfo(final=final, original=original, discount_pct=discount_pct)

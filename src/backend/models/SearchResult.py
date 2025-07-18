@@ -1,6 +1,7 @@
+from dataclasses import dataclass
 from typing import Literal
 
-
+@dataclass
 class PriceInfo:
     final: int           # precio final en cent (0 → Free / Próximamente)
     original: int | None # precio tachado; None si no hay rebaja
@@ -10,7 +11,7 @@ class PriceInfo:
     def is_free(self) -> bool:
         return self.final == 0
 
-
+@dataclass
 class SearchResult:
     """
     Representa una fila del listado de búsqueda de Steam.
