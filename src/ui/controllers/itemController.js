@@ -17,18 +17,26 @@ export function renderItems() {
 
 export async function loadInitialItems() {
     try {
-        const res = await fetch('http://localhost:8000/suggest?term=');
-        if (!res.ok) throw new Error('Error al cargar items iniciales');
-        const data = await res.json();
+        let res = await fetch('http://localhost:8000/search/paginated?term=&start=0&count=20');
+        let data = await res.json();
 
-        items = data.map(item => ({
-            id: item.id,
-            name: item.name,
-            description: '',  // Puedes usar item.review_text o similar si lo deseas
-            picture: `<img src="${item.img}" alt="${item.name}" class="game-image"/>`,
-            owned: false,
-            sent: false
-        }));
+        // Fallback a /suggest si está vacío
+        if (!Array.isArray(data) || data.length < 3) {
+            console.warn('Paginated search is empty, using suggest instead.');
+            const suggestRes = await fetch('http://localhost:8000/suggest?term=');
+            data = await suggestRes.json();
+        }
+
+        items = data
+            .filter(item => item.type === "app")
+            .map(item => ({
+                id: item.id,
+                name: item.name,
+                description: '',
+                picture: `<img src="${item.img}" alt="${item.name}" />`,
+                owned: false,
+                sent: false
+            }));
 
         filteredItems = [...items];
     } catch (err) {
@@ -40,28 +48,36 @@ export async function handleSearch() {
     const searchInput = document.getElementById('searchInput');
     const searchTerm = searchInput.value.trim();
     const query = encodeURIComponent(searchTerm);
-    const url = `http://localhost:8000/suggest?term=${query}`;
+
+    let url = `http://localhost:8000/search/paginated?term=${query}&start=0&count=20`;
 
     try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Error en la búsqueda');
-        const data = await res.json();
+        let res = await fetch(url);
+        let data = await res.json();
 
-        // Solo name e img, y generamos id único por compatibilidad
-        items = data.map(item => ({
-            id: item.id,
-            name: item.name,
-            description: '',     // opcional
-            picture: `<img src="${item.img}" alt="${item.name}" class="game-image"/>`,
-            owned: false,
-            sent: false
-        }));
+        // Fallback a /suggest si vacío
+        if (!Array.isArray(data) || data.length < 3) {
+            console.warn('Search returned empty. Trying /suggest...');
+            const fallbackRes = await fetch(`http://localhost:8000/suggest?term=${query}`);
+            data = await fallbackRes.json();
+        }
+
+        items = data
+            .filter(item => item.type === "app")
+            .map(item => ({
+                id: item.id,
+                name: item.name,
+                description: '',
+                picture: `<img src="${item.img}" alt="${item.name}" />`,
+                owned: false,
+                sent: false
+            }));
 
         filteredItems = [...items];
         renderItems();
         renderOwnedItems(items, filteredItems, renderItems);
     } catch (err) {
-        console.error('Error al buscar:', err);
+        console.error('Error al buscar juegos:', err);
     }
 }
 
