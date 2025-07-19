@@ -1019,6 +1019,11 @@ body {
 	align-items: center;
 	gap: 5px;
 }
+.game-image {
+    width: 100%;
+    max-height: 80px;
+    object-fit: contain;
+}
 /* .menu-dropdown.show ~ .outer-cont,.menu-dropdown.hover ~ .outer-cont {
 	transform: translateY(-200px);
 	transition: transform 0.3s ease;

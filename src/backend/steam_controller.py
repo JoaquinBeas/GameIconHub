@@ -5,11 +5,21 @@ from fastapi import FastAPI, Query, Path, Response, HTTPException
 from fastapi.responses import StreamingResponse
 from backend.steam_service import SteamService
 from backend.utils.response_cleaner import ResponseCleaner
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI(
     title="Steam Service API",
     version="1.0.0",
     description="REST wrapper sobre SteamService"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # o especifica ["http://localhost:PORT"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 steam = SteamService()

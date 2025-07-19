@@ -1,13 +1,14 @@
 // renderer.js
 
-import { renderItems, handleSearch } from './controllers/itemController.js';
+import { renderItems, handleSearch, loadInitialItems } from './controllers/itemController.js';
 import { setupProfileEditing } from './controllers/profileController.js';
 import { setupMenu } from './controllers/menuController.js';
 import { setupModalImageClick } from './components/Modal.js';
 import { items, filteredItems } from './controllers/itemController.js';
 import { renderOwnedItems } from './components/OwnedItemList.js';
 
-function init() {
+async function init() {
+    await loadInitialItems(); // 🔁 nuevo paso antes de renderizar
     renderItems();
     renderOwnedItems(items, filteredItems, renderItems);
     setupProfileEditing();
