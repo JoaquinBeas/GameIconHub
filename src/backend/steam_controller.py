@@ -1,7 +1,8 @@
 # steam_controller.py
+
+import uvicorn
 from fastapi import FastAPI, Query, Path, Response, HTTPException
 from fastapi.responses import StreamingResponse
-import uvicorn
 from backend.steam_service import SteamService
 from backend.utils.response_cleaner import ResponseCleaner
 
@@ -42,21 +43,32 @@ async def get_app_icon_url(
     app_id: str = Path(...)
 ):
     response = steam.get_app_page(app_id)
-    return response
     return response_cleaner.extract_icon_url(response)
 
 # ---------- 5. Imagen de una app ----------
-@app.get("/app/{app_id}/image")
+@app.get("/app/image")
 async def get_app_image(
-    app_id: str = Path(...),
-    image_hash: str = Query(...)
+    url: str = Query(...)
 ):
-    image_bytes = steam.get_app_image(app_id, image_hash)
-    if not image_bytes:
-        raise HTTPException(status_code=404, detail="Imagen no encontrada")
-    print(f"Image bytes length: {len(image_bytes)}")
-    icon_bytes = response_cleaner.transform_into_icon(image_bytes)
-    return StreamingResponse(icon_bytes, media_type="image/png")
+    image_stream = steam.get_image_stream(url)
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    if image_stream is None:
+        raise HTTPException(status_code=404, detail="Imagen no encontrada")
+
+    return StreamingResponse(image_stream, media_type="image/jpeg")
+
+@app.get("/app/{app_id}/icon")
+async def get_app_icon_image(
+    app_id: str = Path(...)
+):
+    response = steam.get_app_page(app_id)
+    icon_url = response_cleaner.extract_icon_url(response)
+
+    if not icon_url:
+        raise HTTPException(status_code=404, detail="Icon URL no encontrada")
+
+    image_stream = steam.get_image_stream(icon_url)
+    if image_stream is None:
+        raise HTTPException(status_code=404, detail="Imagen no encontrada")
+
+    return StreamingResponse(image_stream, media_type="image/jpeg")

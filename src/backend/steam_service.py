@@ -1,5 +1,14 @@
 # steam_service.py
+import subprocess
+import time
 import requests
+import undetected_chromedriver as uc
+from backend.utils.window_hider import WindowHider
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+
 
 class SteamService():
     
@@ -11,6 +20,7 @@ class SteamService():
     def __init__(self, lenguage="spanish",locale="ES"):
         self.lenguage = lenguage
         self.locale = locale
+        self.window_hider = WindowHider()
         
     def suggest_search(self, term):
         url = f"{self.STEAM_BASE_URL}/search/suggest"
@@ -59,27 +69,82 @@ class SteamService():
 
     def get_app_page(self, app_id):
         url = f"{self.STEAMDB_BASE_URL}/app/{app_id}/info/"
-        headers = {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-            "Accept-Encoding": "gzip, deflate, br, zstd",
-            "Accept-Language": "en-US,en;q=0.9",
-            "Cache-Control": "max-age=0",
-            "Cookie": "cf_clearance=v9EWgYdlB0u_zbfKM0p_PxXQ0drQuTzgvnY7HQ85jJ0-1752839502-1.2.1.1-GMLSAZY_SvM4YENOQC2UEgxQmKZhkzgHWF33LuhPUDC4O.cKYvyM7A5irauSqlqb1Q_wiu0IJGrNmLZNdqT5JYMy5JzS4gmvVEbQ6pETsL5gqWHWvHZrh..Qb2W7PFYnzm_Gt55_0S8COKGiG3csJvCdXwgKeV71o_FlZ1nGDOvUgfuB1DdmMJaOj7H9LVSuFxT3Ns90tP5zIwjIbDokl2VSjvrcN8Be9acaMHq934Y",  # recorta el valor según tu necesidad real
-            "Priority": "u=0, i",
-            "Sec-Ch-Ua": '"Not;A Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
-            "Sec-Ch-Ua-Mobile": "?0",
-            "Sec-Ch-Ua-Platform": '"Windows"',
-            "Sec-Fetch-Dest": "document",
-            "Sec-Fetch-Mode": "navigate",
-            "Sec-Fetch-Site": "none",
-            "Sec-Fetch-User": "?1",
-            "Upgrade-Insecure-Requests": "1",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
-        }
-        response = requests.get(url, headers=headers)
-        return response.text
+        
+        # Configurar opciones de Chrome
+        options = uc.ChromeOptions()
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                           "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        
+        # Opciones adicionales para máxima invisibilidad
+        options.add_argument("--disable-extensions")
+        options.add_argument("--disable-plugins")
+        options.add_argument("--disable-images")  # Más rápido
+        options.add_argument("--disable-javascript")  # Solo si no necesitas JS
+        options.add_argument("--mute-audio")
+        options.add_argument("--disable-background-timer-throttling")
+        options.add_argument("--disable-backgrounding-occluded-windows")
+        options.add_argument("--disable-renderer-backgrounding")
+        
+        # Posición inicial fuera de pantalla
+        options.add_argument("--window-position=-5000,-5000")
+        options.add_argument("--window-size=1,1")
+        
+        # Parchar subprocess para usar CREATE_NO_WINDOW
+        original_popen = subprocess.Popen
+        def hidden_popen(*args, **kwargs):
+            startupinfo = self.window_hider.create_hidden_startupinfo()
+            kwargs['startupinfo'] = startupinfo
+            kwargs['creationflags'] = kwargs.get('creationflags', 0) | subprocess.CREATE_NO_WINDOW
+            return original_popen(*args, **kwargs)
+        
+        subprocess.Popen = hidden_popen
+        driver = None
+        
+        try:
+            # Crear driver
+            driver = uc.Chrome(options=options)
+            
+            # Ocultar completamente después de la creación
+            hide_success = self.window_hider.hide_chrome_completely(driver)
+            if hide_success:
+                print("Chrome ocultado exitosamente")
+            
+            # Navegar a la página
+            driver.get(url)
+                
+            # Esperar a que la página cargue completamente (más rápido que sleep fijo)
+            try:
+                WebDriverWait(driver, 5,poll_frequency=0.1).until(
+                    EC.presence_of_element_located((By.TAG_NAME, "body"))
+                )               
+            except TimeoutException:
+                print("Timeout esperando a que cargue la página, continuando...")
+            
+            return driver.page_source
+                    
+        except Exception as e:
+            print(f"Error al cargar la página: {e}")
+            return None
+            
+        finally:
+            # Restaurar subprocess original
+            subprocess.Popen = original_popen
+            
+            # Cerrar driver
+            if driver:
+                try:
+                    driver.quit()
+                except:
+                    pass
 
-    def get_app_image(self, app_id, image_hash):
-        url = f"https://cdn.fastly.steamstatic.com/steamcommunity/public/images/apps/{app_id}/{image_hash}.jpg"
-        response = requests.get(url)
-        return response.content 
+    def get_image_stream(self, url: str):
+        try:
+            response = requests.get(url, stream=True)
+            if response.status_code != 200 or "image" not in response.headers.get("Content-Type", ""):
+                return None
+            return response.raw
+        except requests.RequestException:
+            return None
