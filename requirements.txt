@@ -3,3 +3,4 @@ uvicorn
 BeautifulSoup4
 undetected-chromedriver 
 selenium
+concurrently

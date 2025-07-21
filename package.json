@@ -1,0 +1,13 @@
+{
+  "name": "gameiconhub",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "backend": "cd src && uvicorn backend.steam_controller:app --reload",
+    "ui": "npm start --prefix src/ui",
+    "start-all": "concurrently -k -n BACKEND,UI -c red,cyan \"npm run backend\" \"npm run ui\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}

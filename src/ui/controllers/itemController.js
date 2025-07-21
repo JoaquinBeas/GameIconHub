@@ -1,5 +1,4 @@
 // controllers/itemController.js
-
 import { createItemCard } from '../components/ItemCard.js';
 import { renderOwnedItems } from '../components/OwnedItemList.js';
 
@@ -48,13 +47,12 @@ export async function handleSearch() {
     const searchInput = document.getElementById('searchInput');
     const searchTerm = searchInput.value.trim();
     const query = encodeURIComponent(searchTerm);
-
     let url = `http://localhost:8000/search/paginated?term=${query}&start=0&count=20`;
-
+    
     try {
         let res = await fetch(url);
         let data = await res.json();
-            
+        
         // Fallback a /suggest si vacío
         if (!Array.isArray(data) || data.length < 3) {
             console.warn('Search returned empty. Trying /suggest...');
@@ -101,31 +99,27 @@ export async function downloadItem(itemId) {
     const item = items.find(i => i.id === itemId);
     if (!item) return;
     
+    const card = document.querySelector(`.Btn[data-id="${itemId}"]`);
+    if (!card || card.classList.contains('completed') || card.classList.contains('downloading')) return;
+    
+    // Show loading state
+    showLoadingState(card);
+    
     try {
         await downloadImage(itemId);
         
-        const card = document.querySelector(`.Btn[data-id="${itemId}"]`);
-        if (!card || card.classList.contains('completed')) return;
-        
-        card.classList.add('completed');
-        const CHECK_SVG = `<svg class="svgIcon" viewBox="0 0 512 512" height="1em" xmlns="http://www.w3.org/2000/svg">
-            <path d="M173.9 439.4L7 272c-9.4-9.4-9.4-24.6
-            0-33.9l22.6-22.6c9.4-9.4 24.6-9.4
-            33.9 0L192 312.3 449.4 54.6c9.4-9.4
-            24.6-9.4 33.9 0l22.6 22.6c9.4 9.4
-            9.4 24.6 0 33.9L226.6 439.4c-9.4
-            9.4-24.6 9.4-34 .0z"/>
-        </svg>`;
-        
-        const svgIcon = card.querySelector('.svgIcon');
-        const icon2 = card.querySelector('.icon2');
-        
-        if (svgIcon) svgIcon.outerHTML = CHECK_SVG;
-        if (icon2) icon2.style.display = 'none';
+        // Hide loading and show completed state
+        hideLoadingState(card);
+        showCompletedState(card);
         
         console.log(`Image for ${item.name} downloaded successfully`);
     } catch (error) {
+        // Hide loading state on error
+        hideLoadingState(card);
         console.error(`Error downloading image for ${item.name}:`, error);
+        
+        // Optionally show error state
+        showErrorState(card);
     }
 }
 
@@ -166,4 +160,67 @@ async function downloadImage(itemId) {
     } catch (error) {
         throw new Error(`❌ Error downloading image: ${error.message}`);
     }
+}
+
+// Loading state management functions
+function showLoadingState(card) {
+    // Add downloading class to prevent multiple clicks
+    card.classList.add('downloading');
+    
+    // Create and show the full-screen loader
+    const loader = document.createElement('div');
+    loader.className = 'loader';
+    loader.id = 'downloadLoader';
+    loader.innerHTML = `
+        <div class="justify-content-center jimu-primary-loading"></div>
+    `;
+    
+    // Add loader to body for full-screen coverage
+    document.body.appendChild(loader);
+    
+    // Disable scrolling
+    document.body.style.overflow = 'hidden';
+}
+
+function hideLoadingState(card) {
+    // Remove downloading class
+    card.classList.remove('downloading');
+    
+    // Remove the full-screen loader
+    const loader = document.getElementById('downloadLoader');
+    if (loader) {
+        loader.remove();
+    }
+    
+    // Re-enable scrolling
+    document.body.style.overflow = '';
+}
+
+function showCompletedState(card) {
+    card.classList.add('completed');
+    
+    const CHECK_SVG = `<svg class="svgIcon" viewBox="0 0 512 512" height="1em" xmlns="http://www.w3.org/2000/svg">
+        <path d="M173.9 439.4L7 272c-9.4-9.4-9.4-24.6
+        0-33.9l22.6-22.6c9.4-9.4 24.6-9.4
+        33.9 0L192 312.3 449.4 54.6c9.4-9.4
+        24.6-9.4 33.9 0l22.6 22.6c9.4 9.4
+        9.4 24.6 0 33.9L226.6 439.4c-9.4
+        9.4-24.6 9.4-34 .0z"/>
+    </svg>`;
+    
+    const svgIcon = card.querySelector('.svgIcon');
+    const icon2 = card.querySelector('.icon2');
+    
+    if (svgIcon) svgIcon.outerHTML = CHECK_SVG;
+    if (icon2) icon2.style.display = 'none';
+}
+
+function showErrorState(card) {
+    // Optionally add error styling or show error message
+    card.style.borderColor = '#ff4444';
+    
+    // Reset after 3 seconds
+    setTimeout(() => {
+        card.style.borderColor = '';
+    }, 3000);
 }
