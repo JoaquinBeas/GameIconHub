@@ -1,4 +1,5 @@
 # steam_service.py
+import re
 import subprocess
 import time
 import requests
@@ -148,3 +149,19 @@ class SteamService():
             return response.raw
         except requests.RequestException:
             return None
+        
+    def get_small_icon_url(self, app_id: str) -> str:
+        url = f"{self.STEAM_BASE_URL}/app/{app_id}"
+        try:
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+
+            # Regex match for the img src inside .apphub_AppIcon
+            match = re.search(r'<div class="apphub_AppIcon">\s*<img src="([^"]+)"', response.text)
+            if match:
+                return match.group(1)
+            return None
+        except Exception as e:
+            print(f"[SteamService] Error getting small icon: {e}")
+            return None
+        

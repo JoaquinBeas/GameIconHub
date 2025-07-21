@@ -24,7 +24,12 @@ export function renderOwnedItems(items, filteredItems, renderItemsCallback) {
         div.style.justifyContent = 'space-between';
 
         const text = document.createElement('span');
-        text.textContent = `${item.picture} ${item.name}`;
+        const imgSrc = item.smallIcon || item.picture?.match(/src="([^"]+)"/)?.[1] || '';
+        text.innerHTML = `
+          <img class="owned-item-icon" src="${imgSrc}" alt="${item.name}" 
+              style="width:22px;height:22px;margin-right:6px;vertical-align:middle;" />
+          <span>${item.name}</span>
+        `;
         text.style.flex = '1';
         text.style.cursor = 'pointer';
         div.oncontextmenu = (e) => {

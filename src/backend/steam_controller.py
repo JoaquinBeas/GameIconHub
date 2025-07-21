@@ -67,6 +67,7 @@ async def get_app_image(
 
     return StreamingResponse(image_stream, media_type="image/jpeg")
 
+# ---------- 6. Imagen de una app ----------
 @app.get("/app/{app_id}/icon")
 async def get_app_icon_image(
     app_id: str = Path(...)
@@ -82,3 +83,11 @@ async def get_app_icon_image(
         raise HTTPException(status_code=404, detail="Imagen no encontrada")
 
     return StreamingResponse(image_stream, media_type="image/jpeg")
+
+# ---------- 7. Small game icon ----------
+@app.get("/app/{app_id}/small_icon_url")
+async def get_store_small_icon_url(app_id: str = Path(...)):
+    url = steam.get_small_icon_url(app_id)
+    if not url:
+        raise HTTPException(status_code=404, detail="Small icon not found")
+    return {"icon_url": url}

@@ -149,8 +149,15 @@ body {
 	min-width: 0;
 	max-width: 195px;
 	/* Ajusta según el ancho del sidebar y el botón trash */
-	display: block;
+	display: inline;
 }
+.owned-item-icon {
+  border: 1px solid #777;        /* subtle gray border */
+  border-radius: 4px;            /* optional: rounded corners */
+  padding: 1px;                  /* space inside the border */
+  background-color: #1f1f1f;     /* optional: give contrast */
+}
+
 .owned-item:hover {
 	background-color: #5a5a5a;
 }

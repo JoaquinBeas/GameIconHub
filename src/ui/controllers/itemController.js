@@ -79,21 +79,35 @@ export async function handleSearch() {
     }
 }
 
-export function sendToDesktop(button, itemId) {
+export async function sendToDesktop(button, itemId) {
     const item = items.find(i => i.id === itemId);
     if (!item || button.classList.contains('sent')) return;
-    
+
     button.classList.add('sent');
     const text = button.querySelector('.text');
     if (text) text.innerHTML = 'Sent ✔️';
-    
+
     if (!item.owned) {
         item.owned = true;
         const filteredItem = filteredItems.find(i => i.id === itemId);
         if (filteredItem) filteredItem.owned = true;
+
+        // 👇 Fetch the small icon URL from your backend
+        try {
+            const res = await fetch(`http://localhost:8000/app/${itemId}/small_icon_url`);
+            const data = await res.json();
+            if (data.icon_url) {
+                item.smallIcon = data.icon_url;
+                if (filteredItem) filteredItem.smallIcon = data.icon_url;
+            }
+        } catch (err) {
+            console.warn('Could not load small icon for app:', itemId, err);
+        }
+
         renderOwnedItems(items, filteredItems, renderItems);
     }
 }
+
 
 export async function downloadItem(itemId) {
     const item = items.find(i => i.id === itemId);
