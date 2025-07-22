@@ -1,5 +1,7 @@
 // controllers/profileController.js
 
+import { items } from './itemController.js';
+
 let isEditingName = false;
 
 export function setupProfileEditing() {
@@ -35,6 +37,14 @@ export function setupProfileEditing() {
         const newName = nameInput.value.trim();
         if (newName) profileName.textContent = newName;
         cancelEditingName();
+
+        // Guarda cambios al JSON local
+        if (window.api && typeof window.api.saveData === 'function') {
+            window.api.saveData({
+                username: profileName.textContent,
+                ownedItems: items.filter(i => i.owned)
+            });
+        }
     }
 
     function cancelEditingName() {

@@ -58,6 +58,12 @@ export function renderOwnedItems(items, filteredItems, renderItemsCallback) {
 
             renderOwnedItems(items, filteredItems, renderItemsCallback);
             renderItemsCallback();
+            if (window.api && typeof window.api.saveData === 'function') {
+              window.api.saveData({
+                username: window.getCurrentUsername ? window.getCurrentUsername() : '',
+                ownedItems: items.filter(i => i.owned)
+              });
+            }
         });
 
         div.appendChild(text);

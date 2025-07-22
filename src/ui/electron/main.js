@@ -1,7 +1,7 @@
 // electron/main.js
 const { app, BrowserWindow } = require('electron');
-const path = require('path');
 const { setupIPC } = require('./ipc');
+const path = require('path');
 
 function createWindow() {
     const mainWindow = new BrowserWindow({
@@ -9,9 +9,9 @@ function createWindow() {
         height: 900,
         icon: path.join(__dirname, '..', 'assets', 'app_icon_big.ico'),
         webPreferences: {
-            preload: path.join(__dirname, 'preload.js'), // 👈 nuevo
-            contextIsolation: true,                     // 👈 activado
-            nodeIntegration: false                      // 👈 desactivado
+            preload: path.join(__dirname, 'preload.js'),
+            contextIsolation: true,
+            nodeIntegration: false
         },
         frame: false,
         backgroundColor: '#2d2d2d',
@@ -30,7 +30,6 @@ app.whenReady().then(() => {
     createWindow();
     setupIPC();
 });
-
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {

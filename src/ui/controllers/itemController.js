@@ -105,6 +105,10 @@ export async function sendToDesktop(button, itemId) {
         }
 
         renderOwnedItems(items, filteredItems, renderItems);
+        window.api.saveData({
+            username: getCurrentUsername(), // ← OJO aquí
+            ownedItems: items.filter(i => i.owned)
+        });
     }
 }
 

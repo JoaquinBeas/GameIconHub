@@ -9,6 +9,7 @@ import { renderOwnedItems } from './components/OwnedItemList.js';
 
 async function init() {
     await loadInitialItems(); // 🔁 nuevo paso antes de renderizar
+    loadSideBar()
     renderItems();
     renderOwnedItems(items, filteredItems, renderItems);
     setupProfileEditing();
@@ -16,6 +17,7 @@ async function init() {
     setupModalImageClick();
     wireWindowButtons();
 
+    window.setCurrentUsername = setCurrentUsername;
     // Search input
     const searchButton = document.getElementById('searchButton');
     const searchInput = document.getElementById('searchInput');
@@ -37,6 +39,29 @@ function wireWindowButtons() {
 
     document.getElementById('closeBtn').addEventListener('click', () => {
         window.electronAPI.winAction('close');
+    });
+}
+function getCurrentUsername() {
+    return document.getElementById('profileName')?.textContent || '';
+}
+window.getCurrentUsername = getCurrentUsername;
+
+function setCurrentUsername(username) {
+    const el = document.getElementById('profileName');
+    if (el) el.textContent = username;
+}
+function loadSideBar() {
+    window.api.loadData().then(data => {
+        if (data.username) setCurrentUsername(data.username);
+        if (Array.isArray(data.ownedItems)) {
+            items.forEach(i => {
+                i.owned = data.ownedItems.some(o => o.id === i.id);
+            });
+            filteredItems.length = 0;
+            filteredItems.push(...items);
+            renderItems();
+            renderOwnedItems(items, filteredItems, renderItems);
+        }
     });
 }
 
