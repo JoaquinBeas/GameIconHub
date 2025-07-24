@@ -25,6 +25,17 @@ export async function renderOwnedItems(forceUpdate = false) {
   lastRenderedHash = currentHash;
 }
 
+export async function removeItemFromOwnedList(itemId) {
+  persistentOwnedItems = persistentOwnedItems.filter(i => i.id !== itemId);
+  await saveOwnedItemsToPersistence();
+  renderOwnedItems();
+}
+
+export function isItemOwned(itemId) {
+  return persistentOwnedItems.some(item => item.id === itemId);
+}
+
+
 // 🎨 Renderizado suave que no causa flickering
 async function renderItemsSmooth(container) {
   const existingItems = Array.from(container.querySelectorAll('.owned-item, .no-items-message'));
@@ -213,7 +224,7 @@ let lastLoadTime = 0;
 let loadCache = null;
 const CACHE_DURATION = 1000; // 1 segundo de cache
 
-async function loadOwnedItemsFromPersistence() {
+export async function loadOwnedItemsFromPersistence() {
   const now = Date.now();
 
   // Usa cache si es reciente

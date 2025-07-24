@@ -5,10 +5,11 @@ import { setupProfileEditing } from './controllers/profileController.js';
 import { setupMenu } from './controllers/menuController.js';
 import { setupModalImageClick } from './components/Modal.js';
 import { items, filteredItems } from './controllers/itemController.js';
-import { renderOwnedItems } from './components/OwnedItemList.js';
+import { renderOwnedItems, loadOwnedItemsFromPersistence } from './components/OwnedItemList.js'; // 👈 IMPORTA loadOwnedItemsFromPersistence
 
 async function init() {
     await loadInitialItems();
+    await loadOwnedItemsFromPersistence(); // 👈 PRIMERO, asegúrate que la lista de owned se carga
     loadSideBar();
     renderItems();
     await renderOwnedItems(true); // 🆕 forceUpdate = true en primera carga
