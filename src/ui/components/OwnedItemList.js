@@ -1,87 +1,239 @@
 // components/OwnedItemList.js
 
-// 🔥 NUEVA VERSIÓN: Lee directamente desde persistencia, no depende de otras listas
-let persistentOwnedItems = []; // Cache local de items owned
+// 🔥 VERSIÓN OPTIMIZADA: Sin flickering, solo actualiza cuando hay cambios reales
+let persistentOwnedItems = [];
+let lastRenderedHash = ''; // Hash para detectar cambios reales
 
-export async function renderOwnedItems() {
-  const ownedItemsList = document.getElementById('ownedItemsList');
-  ownedItemsList.innerHTML = '';
-
-  // 📖 SIEMPRE lee desde la persistencia para estar actualizado
+export async function renderOwnedItems(forceUpdate = false) {
+  // 📖 Carga desde persistencia solo si es necesario
   await loadOwnedItemsFromPersistence();
 
-  if (persistentOwnedItems.length === 0) {
-    const msg = document.createElement('div');
-    msg.style.color = '#888';
-    msg.style.fontSize = '14px';
-    msg.style.fontStyle = 'italic';
-    msg.textContent = 'No owned items yet';
-    ownedItemsList.appendChild(msg);
+  // 🔍 Genera hash del estado actual para detectar cambios
+  const currentHash = generateItemsHash(persistentOwnedItems);
+
+  // ⚡ Si no hay cambios y no es forzado, no hace nada
+  if (!forceUpdate && currentHash === lastRenderedHash) {
     return;
   }
 
-  persistentOwnedItems.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'owned-item';
-    div.style.display = 'flex';
-    div.style.alignItems = 'center';
-    div.style.justifyContent = 'space-between';
+  const ownedItemsList = document.getElementById('ownedItemsList');
 
-    const text = document.createElement('span');
-    const imgSrc = item.smallIcon || item.img || '';
-    text.innerHTML = `
-          <img class="owned-item-icon" src="${imgSrc}" alt="${item.name}" 
-              style="width:22px;height:22px;margin-right:6px;vertical-align:middle;" />
-          <span>${item.name}</span>
-        `;
-    text.style.flex = '1';
-    text.style.cursor = 'pointer';
+  // 🎨 Renderizado suave sin limpiar todo
+  await renderItemsSmooth(ownedItemsList);
 
-    div.oncontextmenu = (e) => {
-      e.preventDefault();
-      openItemCard(item, e.clientX, e.clientY);
-    };
+  // 💾 Actualiza el hash guardado
+  lastRenderedHash = currentHash;
+}
 
-    const btn = document.createElement('button');
-    btn.className = 'owned-delete-btn';
-    btn.title = 'Quitar de la lista';
-    btn.innerHTML = `
-            <svg class="lucide lucide-trash-2" stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="#7e8590" fill="none" viewBox="0 0 24 24" height="22" width="22">
-              <path d="M3 6h18"></path>
-              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-              <line y2="17" y1="11" x2="10" x1="10"></line>
-              <line y2="17" y1="11" x2="14" x1="14"></line>
-            </svg>`;
+// 🎨 Renderizado suave que no causa flickering
+async function renderItemsSmooth(container) {
+  const existingItems = Array.from(container.querySelectorAll('.owned-item, .no-items-message'));
+  const existingIds = existingItems.map(el => el.dataset.itemId).filter(Boolean);
 
-    btn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-
-      // 🗑️ Elimina del cache local
-      persistentOwnedItems = persistentOwnedItems.filter(i => i.id !== item.id);
-
-      // 💾 Guarda los cambios inmediatamente
-      await saveOwnedItemsToPersistence();
-
-      // 🔄 Re-renderiza solo la sidebar
-      renderOwnedItems();
+  // 📝 Caso especial: lista vacía
+  if (persistentOwnedItems.length === 0) {
+    // Elimina items existentes con animación
+    existingItems.forEach(el => {
+      if (!el.classList.contains('no-items-message')) {
+        slideOutAndRemove(el);
+      }
     });
 
-    div.appendChild(text);
-    div.appendChild(btn);
-    ownedItemsList.appendChild(div);
-    addTextView(text, item);
+    // Muestra mensaje si no existe
+    if (!container.querySelector('.no-items-message')) {
+      const msg = createEmptyMessage();
+      container.appendChild(msg);
+      slideIn(msg);
+    }
+    return;
+  }
+
+  // 🗑️ Elimina mensaje vacío si existe
+  const emptyMsg = container.querySelector('.no-items-message');
+  if (emptyMsg) {
+    slideOutAndRemove(emptyMsg);
+  }
+
+  const currentIds = persistentOwnedItems.map(item => item.id);
+
+  // 🔄 Actualiza items existentes y agrega nuevos
+  const itemsToProcess = [...persistentOwnedItems];
+
+  for (const item of itemsToProcess) {
+    const existingElement = container.querySelector(`[data-item-id="${item.id}"]`);
+
+    if (existingElement) {
+      // 🔄 Actualiza item existente solo si es necesario
+      updateExistingItem(existingElement, item);
+    } else {
+      // ➕ Agrega nuevo item con animación
+      const newElement = createItemElement(item);
+      container.appendChild(newElement);
+      slideIn(newElement);
+    }
+  }
+
+  // 🗑️ Elimina items que ya no están con animación
+  existingIds.forEach(id => {
+    if (id && !currentIds.includes(id)) {
+      const elementToRemove = container.querySelector(`[data-item-id="${id}"]`);
+      if (elementToRemove) {
+        slideOutAndRemove(elementToRemove);
+      }
+    }
   });
 }
 
-// 📖 Carga items owned desde la persistencia
+// 🏗️ Crea un elemento de item
+function createItemElement(item) {
+  const div = document.createElement('div');
+  div.className = 'owned-item';
+  div.dataset.itemId = item.id;
+  div.style.display = 'flex';
+  div.style.alignItems = 'center';
+  div.style.justifyContent = 'space-between';
+  div.style.opacity = '0'; // Para animación de entrada
+  div.style.transform = 'translateX(-10px)';
+  div.style.transition = 'all 0.2s ease-in-out';
+
+  const text = document.createElement('span');
+  text.className = 'item-text';
+  updateItemText(text, item);
+  text.style.flex = '1';
+  text.style.cursor = 'pointer';
+
+  div.oncontextmenu = (e) => {
+    e.preventDefault();
+    openItemCard(item, e.clientX, e.clientY);
+  };
+
+  const btn = createDeleteButton(item);
+
+  div.appendChild(text);
+  div.appendChild(btn);
+  addTextView(text, item);
+
+  return div;
+}
+
+// 🔄 Actualiza un item existente solo si es necesario
+function updateExistingItem(element, item) {
+  const textElement = element.querySelector('.item-text');
+  const currentImgSrc = textElement.querySelector('img')?.src || '';
+  const newImgSrc = item.smallIcon || item.img || '';
+  const currentName = textElement.querySelector('span')?.textContent || '';
+
+  // Solo actualiza si hay cambios reales
+  if (currentImgSrc !== newImgSrc || currentName !== item.name) {
+    updateItemText(textElement, item);
+  }
+}
+
+// 📝 Actualiza el contenido de texto de un item
+function updateItemText(textElement, item) {
+  const imgSrc = item.smallIcon || item.img || '';
+  textElement.innerHTML = `
+      <img class="owned-item-icon" src="${imgSrc}" alt="${item.name}" 
+          style="width:22px;height:22px;margin-right:6px;vertical-align:middle;" />
+      <span>${item.name}</span>
+    `;
+}
+
+// 🗑️ Crea botón de eliminar
+function createDeleteButton(item) {
+  const btn = document.createElement('button');
+  btn.className = 'owned-delete-btn';
+  btn.title = 'Quitar de la lista';
+  btn.innerHTML = `
+        <svg class="lucide lucide-trash-2" stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="#7e8590" fill="none" viewBox="0 0 24 24" height="22" width="22">
+          <path d="M3 6h18"></path>
+          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+          <line y2="17" y1="11" x2="10" x1="10"></line>
+          <line y2="17" y1="11" x2="14" x1="14"></line>
+        </svg>`;
+
+  btn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+
+    // 🗑️ Elimina del cache local
+    persistentOwnedItems = persistentOwnedItems.filter(i => i.id !== item.id);
+
+    // 💾 Guarda los cambios
+    await saveOwnedItemsToPersistence();
+
+    // 🔄 Re-renderiza de forma suave
+    renderOwnedItems();
+  });
+
+  return btn;
+}
+
+// 📝 Crea mensaje de lista vacía
+function createEmptyMessage() {
+  const msg = document.createElement('div');
+  msg.className = 'no-items-message';
+  msg.style.color = '#888';
+  msg.style.fontSize = '14px';
+  msg.style.fontStyle = 'italic';
+  msg.style.opacity = '0';
+  msg.style.transform = 'translateY(-10px)';
+  msg.style.transition = 'all 0.2s ease-in-out';
+  msg.textContent = 'No owned items yet';
+  return msg;
+}
+
+// 🎬 Animación de entrada
+function slideIn(element) {
+  requestAnimationFrame(() => {
+    element.style.opacity = '1';
+    element.style.transform = 'translateX(0) translateY(0)';
+  });
+}
+
+// 🎬 Animación de salida y eliminación
+function slideOutAndRemove(element) {
+  element.style.opacity = '0';
+  element.style.transform = 'translateX(-10px)';
+
+  setTimeout(() => {
+    if (element.parentNode) {
+      element.parentNode.removeChild(element);
+    }
+  }, 200);
+}
+
+// 🔍 Genera hash para detectar cambios
+function generateItemsHash(items) {
+  return items.map(item => `${item.id}-${item.name}-${item.smallIcon || item.img || ''}`).join('|');
+}
+
+// 📖 Carga items owned desde la persistencia (con cache para evitar lecturas innecesarias)
+let lastLoadTime = 0;
+let loadCache = null;
+const CACHE_DURATION = 1000; // 1 segundo de cache
+
 async function loadOwnedItemsFromPersistence() {
+  const now = Date.now();
+
+  // Usa cache si es reciente
+  if (loadCache && (now - lastLoadTime) < CACHE_DURATION) {
+    persistentOwnedItems = loadCache;
+    return;
+  }
+
   try {
     const data = await window.api.loadData();
-    persistentOwnedItems = Array.isArray(data.ownedItems) ? data.ownedItems : [];
+    const items = Array.isArray(data.ownedItems) ? data.ownedItems : [];
+
+    persistentOwnedItems = items;
+    loadCache = items;
+    lastLoadTime = now;
   } catch (error) {
     console.error('Error loading owned items from persistence:', error);
     persistentOwnedItems = [];
+    loadCache = [];
+    lastLoadTime = now;
   }
 }
 
@@ -93,6 +245,10 @@ async function saveOwnedItemsToPersistence() {
       username: currentData.username || window.getCurrentUsername?.() || '',
       ownedItems: persistentOwnedItems
     });
+
+    // Invalida el cache para forzar recarga en la próxima lectura
+    loadCache = null;
+    lastLoadTime = 0;
   } catch (error) {
     console.error('Error saving owned items to persistence:', error);
   }
@@ -115,7 +271,7 @@ export async function addItemToOwnedList(newItem) {
   // 💾 Guarda inmediatamente
   await saveOwnedItemsToPersistence();
 
-  // 🔄 Re-renderiza la sidebar
+  // 🔄 Re-renderiza de forma suave
   renderOwnedItems();
 }
 
@@ -130,7 +286,7 @@ export async function updateOwnedItem(itemId, updates) {
   // 💾 Guarda cambios
   await saveOwnedItemsToPersistence();
 
-  // 🔄 Re-renderiza
+  // 🔄 Re-renderiza de forma suave
   renderOwnedItems();
 }
 

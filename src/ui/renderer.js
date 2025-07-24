@@ -8,10 +8,10 @@ import { items, filteredItems } from './controllers/itemController.js';
 import { renderOwnedItems } from './components/OwnedItemList.js';
 
 async function init() {
-    await loadInitialItems(); // 🔁 nuevo paso antes de renderizar
-    loadSideBar()
+    await loadInitialItems();
+    loadSideBar();
     renderItems();
-    await renderOwnedItems(); // 🆕 Llamada simplificada, sin parámetros
+    await renderOwnedItems(true); // 🆕 forceUpdate = true en primera carga
     setupProfileEditing();
     setupMenu();
     setupModalImageClick();
