@@ -1,5 +1,7 @@
 # steam_controller.py
 
+from io import BytesIO
+from PIL import Image
 import uvicorn
 from fastapi import FastAPI, Query, Path, Response, HTTPException
 from fastapi.responses import StreamingResponse
@@ -82,7 +84,23 @@ async def get_app_icon_image(
     if image_stream is None:
         raise HTTPException(status_code=404, detail="Imagen no encontrada")
 
-    return StreamingResponse(image_stream, media_type="image/jpeg")
+    # Opcional: convertir a .ico si no lo es
+    content_type = "image/x-icon"
+    filename = f"{app_id}.ico"
+
+    # Si el icon_url ya termina en .ico o el header ya es image/x-icon, lo puedes devolver tal cual.
+    # Si no, lo convertimos a .ico usando PIL:
+    content = image_stream.read()
+    img = Image.open(BytesIO(content))
+    ico_bytes = BytesIO()
+    img.save(ico_bytes, format="ICO")
+    ico_bytes.seek(0)
+
+    headers = {
+        "Content-Disposition": f"attachment; filename={filename}"
+    }
+    return StreamingResponse(ico_bytes, media_type=content_type, headers=headers)
+
 
 # ---------- 7. Small game icon ----------
 @app.get("/app/{app_id}/small_icon_url")

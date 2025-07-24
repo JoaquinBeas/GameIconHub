@@ -142,35 +142,27 @@ export async function downloadItem(itemId) {
 async function downloadImage(itemId) {
     try {
         const url = `http://localhost:8000/app/${itemId}/icon`;
-        
-        // Fetch the image
         const response = await fetch(url);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
-        // Get the image as a blob
+
         const blob = await response.blob();
-        
-        // Create a download link
         const downloadUrl = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = downloadUrl;
-        
-        // Set filename (you might want to get the actual filename from headers)
+
+        // Cambia aquí la extensión a .ico
         const item = items.find(i => i.id === itemId);
-        const filename = item ? `${item.name.replace(/[^a-z0-9]/gi, '_')}.jpg` : `${itemId}.jpg`;
+        const filename = item ? `${item.name.replace(/[^a-z0-9]/gi, '_')}.ico` : `${itemId}.ico`;
         link.download = filename;
-        
-        // Trigger download
+
         document.body.appendChild(link);
         link.click();
-        
-        // Cleanup
         document.body.removeChild(link);
         window.URL.revokeObjectURL(downloadUrl);
-        
+
         return `✅ Image downloaded: ${filename}`;
     } catch (error) {
         throw new Error(`❌ Error downloading image: ${error.message}`);
