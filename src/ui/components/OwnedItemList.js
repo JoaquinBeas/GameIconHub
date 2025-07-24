@@ -1,46 +1,51 @@
 // components/OwnedItemList.js
 
-export function renderOwnedItems(items, filteredItems, renderItemsCallback) {
-    const ownedItemsList = document.getElementById('ownedItemsList');
-    ownedItemsList.innerHTML = '';
+// 🔥 NUEVA VERSIÓN: Lee directamente desde persistencia, no depende de otras listas
+let persistentOwnedItems = []; // Cache local de items owned
 
-    const ownedItems = items.filter(i => i.owned);
+export async function renderOwnedItems() {
+  const ownedItemsList = document.getElementById('ownedItemsList');
+  ownedItemsList.innerHTML = '';
 
-    if (ownedItems.length === 0) {
-        const msg = document.createElement('div');
-        msg.style.color = '#888';
-        msg.style.fontSize = '14px';
-        msg.style.fontStyle = 'italic';
-        msg.textContent = 'No owned items yet';
-        ownedItemsList.appendChild(msg);
-        return;
-    }
+  // 📖 SIEMPRE lee desde la persistencia para estar actualizado
+  await loadOwnedItemsFromPersistence();
 
-    ownedItems.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'owned-item';
-        div.style.display = 'flex';
-        div.style.alignItems = 'center';
-        div.style.justifyContent = 'space-between';
+  if (persistentOwnedItems.length === 0) {
+    const msg = document.createElement('div');
+    msg.style.color = '#888';
+    msg.style.fontSize = '14px';
+    msg.style.fontStyle = 'italic';
+    msg.textContent = 'No owned items yet';
+    ownedItemsList.appendChild(msg);
+    return;
+  }
 
-        const text = document.createElement('span');
-        const imgSrc = item.smallIcon || item.picture?.match(/src="([^"]+)"/)?.[1] || '';
-        text.innerHTML = `
+  persistentOwnedItems.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'owned-item';
+    div.style.display = 'flex';
+    div.style.alignItems = 'center';
+    div.style.justifyContent = 'space-between';
+
+    const text = document.createElement('span');
+    const imgSrc = item.smallIcon || item.img || '';
+    text.innerHTML = `
           <img class="owned-item-icon" src="${imgSrc}" alt="${item.name}" 
               style="width:22px;height:22px;margin-right:6px;vertical-align:middle;" />
           <span>${item.name}</span>
         `;
-        text.style.flex = '1';
-        text.style.cursor = 'pointer';
-        div.oncontextmenu = (e) => {
-            e.preventDefault();
-            openItemCard(item, e.clientX, e.clientY);
-        };
+    text.style.flex = '1';
+    text.style.cursor = 'pointer';
 
-        const btn = document.createElement('button');
-        btn.className = 'owned-delete-btn';
-        btn.title = 'Quitar de la lista';
-        btn.innerHTML = `
+    div.oncontextmenu = (e) => {
+      e.preventDefault();
+      openItemCard(item, e.clientX, e.clientY);
+    };
+
+    const btn = document.createElement('button');
+    btn.className = 'owned-delete-btn';
+    btn.title = 'Quitar de la lista';
+    btn.innerHTML = `
             <svg class="lucide lucide-trash-2" stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="#7e8590" fill="none" viewBox="0 0 24 24" height="22" width="22">
               <path d="M3 6h18"></path>
               <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
@@ -49,69 +54,123 @@ export function renderOwnedItems(items, filteredItems, renderItemsCallback) {
               <line y2="17" y1="11" x2="14" x1="14"></line>
             </svg>`;
 
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            item.owned = false;
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
 
-            const filteredItem = filteredItems.find(i => i.id === item.id);
-            if (filteredItem) filteredItem.owned = false;
+      // 🗑️ Elimina del cache local
+      persistentOwnedItems = persistentOwnedItems.filter(i => i.id !== item.id);
 
-            renderOwnedItems(items, filteredItems, renderItemsCallback);
-            renderItemsCallback();
-            if (window.api && typeof window.api.saveData === 'function') {
-              window.api.saveData({
-                username: window.getCurrentUsername ? window.getCurrentUsername() : '',
-                ownedItems: items.filter(i => i.owned)
-              });
-            }
-        });
+      // 💾 Guarda los cambios inmediatamente
+      await saveOwnedItemsToPersistence();
 
-        div.appendChild(text);
-        div.appendChild(btn);
-        ownedItemsList.appendChild(div);
-        addTextView(text, item)
+      // 🔄 Re-renderiza solo la sidebar
+      renderOwnedItems();
     });
+
+    div.appendChild(text);
+    div.appendChild(btn);
+    ownedItemsList.appendChild(div);
+    addTextView(text, item);
+  });
+}
+
+// 📖 Carga items owned desde la persistencia
+async function loadOwnedItemsFromPersistence() {
+  try {
+    const data = await window.api.loadData();
+    persistentOwnedItems = Array.isArray(data.ownedItems) ? data.ownedItems : [];
+  } catch (error) {
+    console.error('Error loading owned items from persistence:', error);
+    persistentOwnedItems = [];
+  }
+}
+
+// 💾 Guarda items owned a la persistencia
+async function saveOwnedItemsToPersistence() {
+  try {
+    const currentData = await window.api.loadData();
+    await window.api.saveData({
+      username: currentData.username || window.getCurrentUsername?.() || '',
+      ownedItems: persistentOwnedItems
+    });
+  } catch (error) {
+    console.error('Error saving owned items to persistence:', error);
+  }
+}
+
+// 🆕 Nueva función para agregar un item a la sidebar (llamada desde itemController)
+export async function addItemToOwnedList(newItem) {
+  // Verifica si ya existe
+  const exists = persistentOwnedItems.some(item => item.id === newItem.id);
+  if (exists) return;
+
+  // 🏷️ Agrega al cache local
+  persistentOwnedItems.push({
+    id: newItem.id,
+    name: newItem.name,
+    img: newItem.img || newItem.picture?.match(/src="([^"]+)"/)?.[1] || '',
+    smallIcon: newItem.smallIcon || ''
+  });
+
+  // 💾 Guarda inmediatamente
+  await saveOwnedItemsToPersistence();
+
+  // 🔄 Re-renderiza la sidebar
+  renderOwnedItems();
+}
+
+// 🔄 Función para actualizar un item existente (ej: cuando se obtiene smallIcon)
+export async function updateOwnedItem(itemId, updates) {
+  const itemIndex = persistentOwnedItems.findIndex(item => item.id === itemId);
+  if (itemIndex === -1) return;
+
+  // Actualiza las propiedades
+  persistentOwnedItems[itemIndex] = { ...persistentOwnedItems[itemIndex], ...updates };
+
+  // 💾 Guarda cambios
+  await saveOwnedItemsToPersistence();
+
+  // 🔄 Re-renderiza
+  renderOwnedItems();
 }
 
 function addTextView(text, item) {
-    let tooltipTimeout;
-    text.addEventListener('mouseenter', function (e) {
-        // Solo si está cortado visualmente
-        if (this.scrollWidth > this.offsetWidth) {
-            tooltipTimeout = setTimeout(() => {
-                let tooltip = document.createElement('div');
-                tooltip.className = 'owned-tooltip-global show';
-                tooltip.textContent = item.name;
+  let tooltipTimeout;
+  text.addEventListener('mouseenter', function (e) {
+    if (this.scrollWidth > this.offsetWidth) {
+      tooltipTimeout = setTimeout(() => {
+        let tooltip = document.createElement('div');
+        tooltip.className = 'owned-tooltip-global show';
+        tooltip.textContent = item.name;
 
-                document.body.appendChild(tooltip);
+        document.body.appendChild(tooltip);
 
-                // Posiciona el tooltip sobre el texto
-                const rect = this.getBoundingClientRect();
-                tooltip.style.left = `${rect.left + rect.width / 2 - tooltip.offsetWidth / 2}px`;
-                tooltip.style.top = `${rect.top - tooltip.offsetHeight - 8}px`;
+        const rect = this.getBoundingClientRect();
+        tooltip.style.left = `${rect.left + rect.width / 2 - tooltip.offsetWidth / 2}px`;
+        tooltip.style.top = `${rect.top - tooltip.offsetHeight - 8}px`;
 
-                // Corrige si se sale por los lados
-                const pad = 6;
-                if (rect.left + rect.width / 2 - tooltip.offsetWidth / 2 < 0)
-                    tooltip.style.left = pad + 'px';
-                if (rect.left + rect.width / 2 + tooltip.offsetWidth / 2 > window.innerWidth)
-                    tooltip.style.left = (window.innerWidth - tooltip.offsetWidth - pad) + 'px';
+        const pad = 6;
+        if (rect.left + rect.width / 2 - tooltip.offsetWidth / 2 < 0)
+          tooltip.style.left = pad + 'px';
+        if (rect.left + rect.width / 2 + tooltip.offsetWidth / 2 > window.innerWidth)
+          tooltip.style.left = (window.innerWidth - tooltip.offsetWidth - pad) + 'px';
 
-            }, 300);
-        }
-    });
-    text.addEventListener('mouseleave', function (e) {
-        clearTimeout(tooltipTimeout);
-        document.querySelectorAll('.owned-tooltip-global').forEach(el => el.remove());
-    });
+      }, 300);
+    }
+  });
+  text.addEventListener('mouseleave', function (e) {
+    clearTimeout(tooltipTimeout);
+    document.querySelectorAll('.owned-tooltip-global').forEach(el => el.remove());
+  });
 }
-function openItemCard(item, x, y) {
-    const existing = document.querySelector('.card');
-    if (existing) existing.remove();
 
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `
+function openItemCard(item, x, y) {
+  const existing = document.querySelector('.card');
+  if (existing) existing.remove();
+
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
       <ul class="list" style="--color:#5353ff;--hover-storke:#fff; --hover-color:#fff">
         <li class="element">
           <label for="rename">
@@ -156,18 +215,16 @@ function openItemCard(item, x, y) {
           </label>
         </li>
       </ul>`;
-    document.body.appendChild(card);
+  document.body.appendChild(card);
 
-    // Posición dinámica cerca del puntero
-    card.style.position = 'fixed';
-    card.style.top = `${y}px`;
-    card.style.left = `${x}px`;
-    card.style.zIndex = '99999';
+  card.style.position = 'fixed';
+  card.style.top = `${y}px`;
+  card.style.left = `${x}px`;
+  card.style.zIndex = '99999';
 
-    // Cierra si haces click fuera
-    setTimeout(() => {
-        document.addEventListener('click', (e) => {
-            if (!card.contains(e.target)) card.remove();
-        }, { once: true });
-    }, 10);
+  setTimeout(() => {
+    document.addEventListener('click', (e) => {
+      if (!card.contains(e.target)) card.remove();
+    }, { once: true });
+  }, 10);
 }

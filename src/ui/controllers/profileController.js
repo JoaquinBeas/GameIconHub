@@ -31,6 +31,7 @@ export function setupProfileEditing() {
         nameInput.select();
     }
 
+    // En controllers/profileController.js
     function finishEditingName() {
         if (!isEditingName) return;
 
@@ -38,15 +39,16 @@ export function setupProfileEditing() {
         if (newName) profileName.textContent = newName;
         cancelEditingName();
 
-        // Guarda cambios al JSON local
+        // 🆕 Mantener los ownedItems existentes al guardar username
         if (window.api && typeof window.api.saveData === 'function') {
-            window.api.saveData({
-                username: profileName.textContent,
-                ownedItems: items.filter(i => i.owned)
+            window.api.loadData().then(currentData => {
+                window.api.saveData({
+                    username: profileName.textContent,
+                    ownedItems: currentData.ownedItems || [] // 🔒 Preservar items existentes
+                });
             });
         }
     }
-
     function cancelEditingName() {
         isEditingName = false;
         nameInput.style.display = 'none';

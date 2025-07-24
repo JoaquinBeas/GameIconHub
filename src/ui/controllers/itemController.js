@@ -1,6 +1,7 @@
 // controllers/itemController.js
 import { createItemCard } from '../components/ItemCard.js';
 import { renderOwnedItems } from '../components/OwnedItemList.js';
+import { addItemToOwnedList, updateOwnedItem } from '../components/OwnedItemList.js'; // 🆕 Importar
 
 export let items = [];
 export let filteredItems = [];
@@ -87,31 +88,27 @@ export async function sendToDesktop(button, itemId) {
     const text = button.querySelector('.text');
     if (text) text.innerHTML = 'Sent ✔️';
 
-    if (!item.owned) {
-        item.owned = true;
-        const filteredItem = filteredItems.find(i => i.id === itemId);
-        if (filteredItem) filteredItem.owned = true;
+    // 🆕 Agrega a la sidebar independiente
+    const itemForSidebar = {
+        id: item.id,
+        name: item.name,
+        img: item.picture?.match(/src="([^"]+)"/)?.[1] || ''
+    };
 
-        // 👇 Fetch the small icon URL from your backend
-        try {
-            const res = await fetch(`http://localhost:8000/app/${itemId}/small_icon_url`);
-            const data = await res.json();
-            if (data.icon_url) {
-                item.smallIcon = data.icon_url;
-                if (filteredItem) filteredItem.smallIcon = data.icon_url;
-            }
-        } catch (err) {
-            console.warn('Could not load small icon for app:', itemId, err);
+    // 👇 Obtén el smallIcon del backend
+    try {
+        const res = await fetch(`http://localhost:8000/app/${itemId}/small_icon_url`);
+        const data = await res.json();
+        if (data.icon_url) {
+            itemForSidebar.smallIcon = data.icon_url;
         }
-
-        renderOwnedItems(items, filteredItems, renderItems);
-        window.api.saveData({
-            username: getCurrentUsername(), // ← OJO aquí
-            ownedItems: items.filter(i => i.owned)
-        });
+    } catch (err) {
+        console.warn('Could not load small icon for app:', itemId, err);
     }
-}
 
+    // 🏷️ Agrega a la sidebar (independiente)
+    await addItemToOwnedList(itemForSidebar);
+}
 
 export async function downloadItem(itemId) {
     const item = items.find(i => i.id === itemId);

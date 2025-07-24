@@ -11,7 +11,7 @@ async function init() {
     await loadInitialItems(); // 🔁 nuevo paso antes de renderizar
     loadSideBar()
     renderItems();
-    renderOwnedItems(items, filteredItems, renderItems);
+    await renderOwnedItems(); // 🆕 Llamada simplificada, sin parámetros
     setupProfileEditing();
     setupMenu();
     setupModalImageClick();
@@ -53,15 +53,6 @@ function setCurrentUsername(username) {
 function loadSideBar() {
     window.api.loadData().then(data => {
         if (data.username) setCurrentUsername(data.username);
-        if (Array.isArray(data.ownedItems)) {
-            items.forEach(i => {
-                i.owned = data.ownedItems.some(o => o.id === i.id);
-            });
-            filteredItems.length = 0;
-            filteredItems.push(...items);
-            renderItems();
-            renderOwnedItems(items, filteredItems, renderItems);
-        }
     });
 }
 
