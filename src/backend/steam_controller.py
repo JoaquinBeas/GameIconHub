@@ -3,11 +3,12 @@
 from io import BytesIO
 from PIL import Image
 import uvicorn
-from fastapi import FastAPI, Query, Path, Response, HTTPException
+from fastapi import FastAPI, Query, Path, Response, HTTPException, Body
 from fastapi.responses import StreamingResponse
 from backend.steam_service import SteamService
 from backend.utils.response_cleaner import ResponseCleaner
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 
 app = FastAPI(
@@ -27,6 +28,8 @@ app.add_middleware(
 steam = SteamService()
 response_cleaner = ResponseCleaner()
 
+class ShortcutRequest(BaseModel):
+    app_name: str
 # ---------- 1. Sugerencias de búsqueda ----------
 @app.get("/suggest")
 async def suggest_search(term: str = Query(...)):
@@ -109,3 +112,28 @@ async def get_store_small_icon_url(app_id: str = Path(...)):
     if not url:
         raise HTTPException(status_code=404, detail="Small icon not found")
     return {"icon_url": url}
+
+@app.post("/app/{app_id}/generate_shortcut")
+async def generate_shortcut(
+    app_id: str = Path(...),
+    data: ShortcutRequest = Body(...)
+):
+    app_name = data.app_name
+    response = steam.get_app_page(app_id)
+    icon_url = response_cleaner.extract_icon_url(response)
+    if not icon_url:
+        return {"success": False, "error": "No se pudo obtener el icono"}
+
+    result = steam.generate_shortcut(app_name, icon_url)
+    if result["success"]:
+        return {"detail": "Shortcut created"}
+    else:
+        raise HTTPException(status_code=500, detail=result["error"])
+    
+@app.delete("/app/delete_shortcut")
+async def delete_shortcut(data: ShortcutRequest = Body(...)):
+    result = steam.delete_shortcut(data.app_name)
+    if result["success"]:
+        return {"detail": "Shortcut eliminado"}
+    else:
+        raise HTTPException(status_code=404, detail=result["error"])

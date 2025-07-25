@@ -4,3 +4,5 @@ BeautifulSoup4
 undetected-chromedriver 
 selenium
 concurrently
+pyshortcuts
+pillow

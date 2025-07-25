@@ -1,5 +1,5 @@
 // components/OwnedItemList.js
-
+import { deleteDesktopShortcut } from "../controllers/itemController.js";
 // 🔥 VERSIÓN OPTIMIZADA: Sin flickering, solo actualiza cuando hay cambios reales
 let persistentOwnedItems = [];
 let lastRenderedHash = ''; // Hash para detectar cambios reales
@@ -29,6 +29,9 @@ export async function removeItemFromOwnedList(itemId) {
   persistentOwnedItems = persistentOwnedItems.filter(i => i.id !== itemId);
   await saveOwnedItemsToPersistence();
   renderOwnedItems();
+  if (item) {
+    await deleteDesktopShortcut(item.name); // <- Asumiendo que `item.name` es `app_name`
+  }
 }
 
 export function isItemOwned(itemId) {
@@ -175,6 +178,7 @@ function createDeleteButton(item) {
 
     // 🔄 Re-renderiza de forma suave
     renderOwnedItems();
+    await deleteDesktopShortcut(item.name); // <- Asumiendo que `item.name` es `app_name`
   });
 
   return btn;

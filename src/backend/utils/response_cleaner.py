@@ -9,7 +9,6 @@ from bs4 import BeautifulSoup
 from backend.models.SearchResult import PriceInfo, SearchResult
 from backend.models.SearchEntry import SearchEntry
 from backend.models.SuggestionEntry import Suggestion
-from backend.steam_service import SteamService
 
 
 class ResponseCleaner:

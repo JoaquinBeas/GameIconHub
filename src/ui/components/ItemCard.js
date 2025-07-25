@@ -62,15 +62,6 @@ export function createItemCard(item) {
 
 
     const downloadBtn = card.querySelector('.Btn');
-    const favoriteInput = card.querySelector('.fav-btn-checkbox');
-    // favoriteInput.addEventListener('change', (e) => {
-    //     console.log("afjnkaw")
-    //     if (e.target.checked) {
-    //         debugger;
-    //         sendToDesktop(favoriteInput, item.id); // O tu lógica de favorito
-    //     }
-    //     // Si quieres manejar des-favorito, añade lógica aquí
-    // });
 
     downloadBtn.addEventListener('click', () => downloadItem(item.id));
 

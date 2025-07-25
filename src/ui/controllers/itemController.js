@@ -108,6 +108,18 @@ export async function sendToDesktop(button, itemId) {
 
     // 🏷️ Agrega a la sidebar (independiente)
     await addItemToOwnedList(itemForSidebar);
+    try {
+        await fetch(`http://localhost:8000/app/${item.id}/generate_shortcut`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                app_name: item.name
+            })
+        });
+
+    } catch (err) {
+        console.warn('Could not create shortcut on desktop:', err);
+    }
 }
 
 export async function downloadItem(itemId) {
@@ -138,6 +150,26 @@ export async function downloadItem(itemId) {
     }
 }
 
+export async function deleteDesktopShortcut(appName) {
+    try {
+        const response = await fetch('/app/delete_shortcut', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ app_name: appName })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            console.warn('❌ Error deleting shortcut:', error.detail);
+        } else {
+            console.log('🗑️ Shortcut deleted');
+        }
+    } catch (err) {
+        console.error('❌ Failed to delete shortcut:', err);
+    }
+}
 // Browser-compatible image download function
 async function downloadImage(itemId) {
     try {
@@ -168,6 +200,9 @@ async function downloadImage(itemId) {
         throw new Error(`❌ Error downloading image: ${error.message}`);
     }
 }
+
+
+
 
 // Loading state management functions
 function showLoadingState(card) {

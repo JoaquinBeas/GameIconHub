@@ -1,14 +1,24 @@
 # steam_service.py
+import os
 import re
 import subprocess
+import tempfile
 import time
 import requests
+from PIL import Image
 import undetected_chromedriver as uc
+from backend.utils.response_cleaner  import ResponseCleaner
 from backend.utils.window_hider import WindowHider
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+import requests
+from pyshortcuts import make_shortcut
+import ctypes
+from pathlib import Path
+from ctypes import wintypes
+
 
 
 class SteamService():
@@ -164,4 +174,95 @@ class SteamService():
         except Exception as e:
             print(f"[SteamService] Error getting small icon: {e}")
             return None
+    
+    def generate_shortcut(self,app_name, icon_url):
+        temp_dir = tempfile.gettempdir()
+        icon_png_path = os.path.join(temp_dir, f"{app_name}.png")
+        icon_ico_path = os.path.join(temp_dir, f"{app_name}.ico")
         
+        # 1. Download image as PNG (or original format)
+        r = requests.get(icon_url)
+        if r.status_code == 200:
+            with open(icon_png_path, 'wb') as f:
+                f.write(r.content)
+        else:
+            return {"success": False, "error": "Could not download icon"}
+        
+        # 2. Convert to ICO
+        try:
+            im = Image.open(icon_png_path)
+            im.save(icon_ico_path, format="ICO")
+        except Exception as e:
+            return {"success": False, "error": f"ICO conversion error: {e}"}
+
+        # 3. Create dummy script for shortcut
+        data_dir = os.path.join(os.path.expanduser('~'), 'AppData', 'Roaming', 'GameIconHub')
+        os.makedirs(data_dir, exist_ok=True)
+        dummy_path = os.path.join(data_dir, 'dummy_target.bat')
+        with open(dummy_path, 'w') as f:
+            pass
+
+        # 4. Create shortcut with icon
+        desktop = os.path.join(os.path.expanduser('~'), 'Desktop')
+        print("ICON_NAME:",app_name)
+        make_shortcut(
+            script=dummy_path,
+            name=app_name,
+            icon=icon_ico_path,
+            desktop=True,
+            startmenu=False,
+            terminal=False
+        )
+
+        # 5. Wait a bit before deleting the icon (let Windows read it)
+        desktop_path = self.get_desktop_path()
+
+        old_name = desktop_path / f"{app_name.replace(' ', '_')}.lnk"
+        new_name = desktop_path / f"{app_name}.lnk"
+
+        print("[BACKEND] Looking for shortcut:", old_name)
+        if old_name.exists():
+            old_name.rename(new_name)
+            print("[BACKEND] Renamed to:", new_name)
+
+        # 6. Cleanup: remove icon and dummy
+
+        time.sleep(1)  # 2 seconds is usually enough
+        try:
+            if os.path.exists(icon_png_path): os.remove(icon_png_path)
+            if os.path.exists(icon_ico_path): os.remove(icon_ico_path)
+            if os.path.exists(dummy_path): os.remove(dummy_path)
+        except Exception as e:
+            pass
+        return {"success": True}
+    
+    def get_desktop_path(self):
+        CSIDL_DESKTOPDIRECTORY = 0x10
+        SHGFP_TYPE_CURRENT = 0
+
+        buf = ctypes.create_unicode_buffer(wintypes.MAX_PATH)
+        ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_DESKTOPDIRECTORY, None, SHGFP_TYPE_CURRENT, buf)
+        return Path(buf.value)
+    
+    def delete_shortcut(self, app_name: str) -> dict:
+        desktop_path = self.get_desktop_path()
+
+        possible_names = [
+            f"{app_name}.lnk",
+            f"{app_name.replace(' ', '_')}.lnk"  # En caso de que aún no se haya renombrado
+        ]
+
+        deleted = False
+        for shortcut in possible_names:
+            shortcut_path = desktop_path / shortcut
+            if shortcut_path.exists():
+                try:
+                    shortcut_path.unlink()
+                    deleted = True
+                except Exception as e:
+                    return {"success": False, "error": f"No se pudo borrar el acceso directo: {e}"}
+
+        if not deleted:
+            return {"success": False, "error": "Acceso directo no encontrado"}
+
+        return {"success": True}
