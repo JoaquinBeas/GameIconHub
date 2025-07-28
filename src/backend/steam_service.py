@@ -79,7 +79,7 @@ class SteamService():
         response = requests.get(url, params=params)
         return response.text
 
-    def get_app_page(self, app_id): #TODO:MIRAR AÑADIR PROXY
+    def get_app_page(self, app_id):
         # Loads the SteamDB page for a given app ID using a headless Chrome driver
         url = f"{self.STEAMDB_BASE_URL}/app/{app_id}/info/"
         options = uc.ChromeOptions()
@@ -152,7 +152,7 @@ class SteamService():
             match = re.search(r'<div class="apphub_AppIcon">\s*<img src="([^"]+)"', response.text)
             return match.group(1) if match else None
         except Exception as e:
-            print(f"[SteamService] Error getting small icon: {e}")
+            print(f"Error getting small icon: {e}")
             return None
     
     def generate_shortcut(self, app_name, icon_url):
@@ -207,7 +207,7 @@ class SteamService():
             best_match.rename(target_final_path)
             self.refresh_desktop()
         else:
-            print(f"[BACKEND] No suitable .lnk file found (min distance={lowest_distance})")
+            print(f"No suitable .lnk file found (min distance={lowest_distance})")
 
         # Cleanup temporary files
         try:

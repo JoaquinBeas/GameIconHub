@@ -6,9 +6,9 @@ import re
 from PIL import Image
 from typing import List, Literal
 from bs4 import BeautifulSoup
-from backend.models.InfiniteSearchResult import PriceInfo, InfiniteSearchResult
-from backend.models.PaginatedSearchResult import PaginatedSearchResult
-from backend.models.SuggestionResult import Suggestion
+from backend.models.infinite_search_result import PriceInfo, InfiniteSearchResult
+from backend.models.paginated_search_result import PaginatedSearchResult
+from backend.models.suggestion_result import Suggestion
 
 class ResponseCleaner:
     

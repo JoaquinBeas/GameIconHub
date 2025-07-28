@@ -1,10 +1,10 @@
-# steam_controller.py
+# main.py
 
 from io import BytesIO
 from PIL import Image
 from fastapi import FastAPI, Query, Path, HTTPException, Body
 from fastapi.responses import StreamingResponse
-from backend.models.ShortCutRequest import ShortcutRequest
+from backend.models.shortcut_request import ShortcutRequest
 from backend.steam_service import SteamService
 from backend.utils.response_cleaner import ResponseCleaner
 from fastapi.middleware.cors import CORSMiddleware
