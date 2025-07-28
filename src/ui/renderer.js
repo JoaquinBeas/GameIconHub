@@ -1,18 +1,15 @@
 // renderer.js
 
 import { renderItems, handleSearch, loadInitialItems } from './controllers/itemController.js';
-import { setupProfileEditing } from './controllers/profileController.js';
 import { setupMenu } from './controllers/menuController.js';
 import { setupModalImageClick } from './components/Modal.js';
 import { renderOwnedItems, loadOwnedItemsFromPersistence } from './components/OwnedItemList.js';
 
 async function init() {
     wireWindowButtons();
-    setupProfileEditing();
     setupMenu();
     setupModalImageClick();
     setupSearchHandlers();
-    window.setCurrentUsername = setCurrentUsername;
 
     try {
         await waitForBackend();
@@ -24,7 +21,6 @@ async function init() {
     hideLoadingOverlay();
     await loadInitialItems();
     await loadOwnedItemsFromPersistence();
-    loadSideBar();
     renderItems();
     await renderOwnedItems(true);
 }
@@ -63,22 +59,6 @@ function wireWindowButtons() {
     });
 }
 
-function getCurrentUsername() {
-    return document.getElementById('profileName')?.textContent || '';
-}
-
-
-function setCurrentUsername(username) {
-    const el = document.getElementById('profileName');
-    if (el) el.textContent = username;
-}
-
-function loadSideBar() {
-    window.api.loadData().then(data => {
-        if (data.username) setCurrentUsername(data.username);
-    });
-}
-
 function setupSearchHandlers() {
     const events = ['click', 'input', 'keypress'];
     const searchButton = document.getElementById('searchButton');
@@ -96,5 +76,4 @@ function hideLoadingOverlay() {
     if (overlay) overlay.style.display = 'none';
 }
 
-window.getCurrentUsername = getCurrentUsername;
 document.addEventListener('DOMContentLoaded', init);

@@ -260,8 +260,8 @@ async function saveOwnedItemsToPersistence() {
   try {
     const currentData = await window.api.loadData();
     await window.api.saveData({
-      username: currentData.username || window.getCurrentUsername?.() || '',
-      ownedItems: persistentOwnedItems
+        encryptedGuid: currentData.encryptedGuid || '', // conservar
+        ownedItems: persistentOwnedItems
     });
 
     // Invalida el cache para forzar recarga en la próxima lectura
