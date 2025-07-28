@@ -170,7 +170,6 @@ function createDeleteButton(item) {
 
   btn.addEventListener('click', async (e) => {
     e.stopPropagation();
-    console.log("itemname:", item.name);
     await deleteDesktopShortcut(item.name); // <- Asumiendo que `item.name` es `app_name`
     persistentOwnedItems = persistentOwnedItems.filter(i => i.id !== item.id);
 

@@ -49,7 +49,9 @@ function setupIPC() {
     });
     ipcMain.handle('delete-shortcut', async (event, appName) => {
         try {
-            const shortcutPath = path.join(app.getPath('desktop'), `${appName}.lnk`);
+            const cleanAppName = sanitizeFileName(appName.replace(/_/g, ' '));
+            const shortcutPath = path.join(app.getPath('desktop'), `${cleanAppName}.lnk`);
+            // const shortcutPath = path.join(app.getPath('desktop'), `${appName}.lnk`);
             if (fs.existsSync(shortcutPath)) {
                 fs.unlinkSync(shortcutPath);
                 console.log(`🗑️ Deleted shortcut: ${shortcutPath}`);
@@ -63,6 +65,9 @@ function setupIPC() {
             return { success: false, message: err.message };
         }
     });
+}
+function sanitizeFileName(name) {
+    return name.replace(/[<>:"/\\|?*]/g, '');
 }
 
 module.exports = { setupIPC };

@@ -262,11 +262,10 @@ class SteamService():
         return Path(buf.value)
     
     def generate_shortcut_filename(self, app_name: str) -> str:
-        print("awa ",app_name)
-        # 1. Reemplaza guiones bajos por espacios
         app_name = app_name.replace('_', ' ')
-        print("awi ",app_name)
-        # 3. Devuelve con extensión
+        invalid_chars = r'<>:"/\|?*'
+        for ch in invalid_chars:
+            app_name = app_name.replace(ch, '')
         return app_name + ".lnk"
        
     def refresh_desktop(self):
@@ -278,13 +277,14 @@ class SteamService():
 
     def delete_shortcut(self, app_name: str) -> dict:
         from Levenshtein import distance as levenshtein_distance
-
         desktop_path = self.get_desktop_path()
-
+        app_name = app_name.replace('_', ' ')
+        invalid_chars = r'<>:"/\|?*'
+        for ch in invalid_chars:
+            app_name = app_name.replace(ch, '')
         # Intenta primero nombres exactos (igual que antes)
         possible_names = [
-            f"{app_name}.lnk",
-            f"{app_name.replace(' ', '_')}.lnk"
+            f"{app_name}.lnk"
         ]
 
         for name in possible_names:
@@ -307,8 +307,7 @@ class SteamService():
                 best_match = file
                 lowest_distance = dist
 
-        MAX_DISTANCE = 10  # igual que en generate_shortcut
-
+        MAX_DISTANCE = 30  # igual que en generate_shortcut
         if best_match and lowest_distance <= MAX_DISTANCE:
             try:
                 best_match.unlink()
