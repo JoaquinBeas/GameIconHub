@@ -176,8 +176,11 @@ function createDeleteButton(item) {
     // 💾 Guarda los cambios
     await saveOwnedItemsToPersistence();
 
-    // 🔄 Re-renderiza de forma suave
+    // 🔄 Re-renderiza de forma suaveremoveItemFromOwnedList
     renderOwnedItems();
+    import('../controllers/itemController.js').then(module => {
+      module.renderItems(); // fuerza re-render de los ItemCards
+    });
     await deleteDesktopShortcut(item.name); // <- Asumiendo que `item.name` es `app_name`
   });
 

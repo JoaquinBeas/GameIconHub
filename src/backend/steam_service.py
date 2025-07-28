@@ -18,6 +18,7 @@ from pyshortcuts import make_shortcut
 import ctypes
 from pathlib import Path
 from ctypes import wintypes
+import Levenshtein
 
 
 
@@ -217,17 +218,38 @@ class SteamService():
         # 5. Wait a bit before deleting the icon (let Windows read it)
         desktop_path = self.get_desktop_path()
 
-        old_name = desktop_path / f"{app_name.replace(' ', '_')}.lnk"
-        new_name = desktop_path / f"{app_name}.lnk"
+        target_name = app_name
+        safe_filename = self.generate_shortcut_filename(target_name)
+        target_final_path = desktop_path / safe_filename
 
-        print("[BACKEND] Looking for shortcut:", old_name)
-        if old_name.exists():
-            old_name.rename(new_name)
-            print("[BACKEND] Renamed to:", new_name)
+        # Find closest match among existing .lnk files
+        best_match = None
+        lowest_distance = float('inf')
+        for file in desktop_path.glob("*.lnk"):
+            distance = Levenshtein.distance(file.stem.lower(), app_name.lower())
+            if distance < lowest_distance:
+                best_match = file
+                lowest_distance = distance
 
-        # 6. Cleanup: remove icon and dummy
+        MAX_DISTANCE = 5
 
-        time.sleep(1)  # 2 seconds is usually enough
+        time.sleep(1)
+
+        if best_match and lowest_distance <= MAX_DISTANCE:
+            print(f"[BACKEND] Found shortcut candidate: {best_match} (distance={lowest_distance})")
+            
+            # Rename: convert underscores to spaces and sanitize
+            nice_name = best_match.stem.replace('_', ' ')
+            final_name = self.generate_shortcut_filename(nice_name)
+            target_final_path = desktop_path / final_name
+            
+            best_match.rename(target_final_path)
+            self.refresh_desktop()
+            print(f"[BACKEND] Renamed to: {target_final_path}")
+        else:
+            print(f"[BACKEND] No suitable .lnk file found (min distance={lowest_distance})")
+
+
         try:
             if os.path.exists(icon_png_path): os.remove(icon_png_path)
             if os.path.exists(icon_ico_path): os.remove(icon_ico_path)
@@ -244,6 +266,25 @@ class SteamService():
         ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_DESKTOPDIRECTORY, None, SHGFP_TYPE_CURRENT, buf)
         return Path(buf.value)
     
+    def sanitize_filename(self, name: str) -> str:
+        # Replace invalid characters for Windows filenames
+        return re.sub(r'[\\/:"*?<>|]+', '', name)
+
+    def generate_shortcut_filename(self, app_name: str) -> str:
+        # Remove invalid characters, but preserve spaces
+        return self.sanitize_filename(app_name) + ".lnk"
+    
+    def sanitize_filename(self, name: str) -> str:
+        """Remove or replace invalid characters for Windows filenames"""
+        return re.sub(r'[\\/:"*?<>|]+', '_', name)
+   
+    def refresh_desktop(self):
+        """Force the Windows desktop to refresh"""
+        SHCNE_ASSOCCHANGED = 0x08000000
+        SHCNF_IDLIST = 0x0000
+
+        ctypes.windll.shell32.SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, None, None)
+
     def delete_shortcut(self, app_name: str) -> dict:
         desktop_path = self.get_desktop_path()
 
