@@ -48,14 +48,12 @@
             <div class="owned-items-section">
                 <h3>Desktop Icons</h3>
                 <div class="owned-items-list" id="ownedItemsList">
-                    <!-- Owned items will be populated here -->
                 </div>
             </div>
 
             <div class="menu-section">
                 <button class="outer-cont flex" id="aiButton" title="Ask Spacious AI">
                     <svg viewBox="0 0 24 24" height="24" width="24" xmlns="http://www.w3.org/2000/svg">
-                        <!-- SVG content... -->
                     </svg>
                     AI Assistant
                 </button>
@@ -89,7 +87,6 @@
             </div>
 
             <div class="items-container" id="itemsContainer">
-                <!-- Items will be populated here -->
             </div>
         </div>
     </div>
@@ -99,8 +96,15 @@
             <div id="modalPicture" class="modal-picture"></div>
         </div>
     </div>
-
-    <!-- ✅ Usa "type=module" para que funcionen los imports -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loadingspinner">
+        <div id="square1"></div>
+        <div id="square2"></div>
+        <div id="square3"></div>
+        <div id="square4"></div>
+        <div id="square5"></div>
+    </div>
+</div>
 <script type="module" src="./renderer.js"></script>
 </body>
 </html>

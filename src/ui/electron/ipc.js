@@ -6,6 +6,10 @@ const path = require('path');
 function setupIPC() {
     ipcMain.handle('win-action', (event, action) => {
         const win = BrowserWindow.fromWebContents(event.sender);
+        if (!win) {
+            console.error('❌ No se pudo obtener la ventana');
+            return false;
+        }
         switch (action) {
             case 'minimize':
                 win.minimize();
@@ -21,6 +25,9 @@ function setupIPC() {
             case 'close':
                 win.close();
                 break;
+            default:
+                console.warn('Unknown win action:', action);
+                return false;
         }
     });
 
