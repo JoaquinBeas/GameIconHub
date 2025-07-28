@@ -152,24 +152,17 @@ export async function downloadItem(itemId) {
 
 export async function deleteDesktopShortcut(appName) {
     try {
-        const response = await fetch('/app/delete_shortcut', {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ app_name: appName })
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            console.warn('❌ Error deleting shortcut:', error.detail);
+        const result = await window.api.deleteShortcut(appName);
+        if (result.success) {
+            console.log('🗑️ Shortcut deleted successfully');
         } else {
-            console.log('🗑️ Shortcut deleted');
+            console.warn('⚠️ Failed to delete shortcut:', result.message);
         }
     } catch (err) {
-        console.error('❌ Failed to delete shortcut:', err);
+        console.error('❌ Error deleting shortcut:', err);
     }
 }
+
 // Browser-compatible image download function
 async function downloadImage(itemId) {
     try {

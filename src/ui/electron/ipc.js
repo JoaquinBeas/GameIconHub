@@ -47,6 +47,22 @@ function setupIPC() {
         console.log('DATA LOADED:', content);
         return JSON.parse(content || '{}');
     });
+    ipcMain.handle('delete-shortcut', async (event, appName) => {
+        try {
+            const shortcutPath = path.join(app.getPath('desktop'), `${appName}.lnk`);
+            if (fs.existsSync(shortcutPath)) {
+                fs.unlinkSync(shortcutPath);
+                console.log(`🗑️ Deleted shortcut: ${shortcutPath}`);
+                return { success: true };
+            } else {
+                console.warn(`⚠️ Shortcut not found: ${shortcutPath}`);
+                return { success: false, message: 'Shortcut not found' };
+            }
+        } catch (err) {
+            console.error('❌ Error deleting shortcut:', err);
+            return { success: false, message: err.message };
+        }
+    });
 }
 
 module.exports = { setupIPC };

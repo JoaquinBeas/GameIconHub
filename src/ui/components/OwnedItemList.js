@@ -26,12 +26,13 @@ export async function renderOwnedItems(forceUpdate = false) {
 }
 
 export async function removeItemFromOwnedList(itemId) {
+  const item = persistentOwnedItems.find(i => i.id === itemId);
+  if (item) {
+    await deleteDesktopShortcut(item.name);
+  }
   persistentOwnedItems = persistentOwnedItems.filter(i => i.id !== itemId);
   await saveOwnedItemsToPersistence();
-  renderOwnedItems();
-  if (item) {
-    await deleteDesktopShortcut(item.name); // <- Asumiendo que `item.name` es `app_name`
-  }
+  await renderOwnedItems();
 }
 
 export function isItemOwned(itemId) {
@@ -169,8 +170,8 @@ function createDeleteButton(item) {
 
   btn.addEventListener('click', async (e) => {
     e.stopPropagation();
-
-    // 🗑️ Elimina del cache local
+    console.log("itemname:", item.name);
+    await deleteDesktopShortcut(item.name); // <- Asumiendo que `item.name` es `app_name`
     persistentOwnedItems = persistentOwnedItems.filter(i => i.id !== item.id);
 
     // 💾 Guarda los cambios
@@ -181,7 +182,7 @@ function createDeleteButton(item) {
     import('../controllers/itemController.js').then(module => {
       module.renderItems(); // fuerza re-render de los ItemCards
     });
-    await deleteDesktopShortcut(item.name); // <- Asumiendo que `item.name` es `app_name`
+
   });
 
   return btn;

@@ -204,7 +204,7 @@ class SteamService():
             pass
 
         # 4. Create shortcut with icon
-        desktop = os.path.join(os.path.expanduser('~'), 'Desktop')
+        # desktop = os.path.join(os.path.expanduser('~'), 'Desktop')
         print("ICON_NAME:",app_name)
         make_shortcut(
             script=dummy_path,
@@ -237,10 +237,7 @@ class SteamService():
 
         if best_match and lowest_distance <= MAX_DISTANCE:
             print(f"[BACKEND] Found shortcut candidate: {best_match} (distance={lowest_distance})")
-            
-            # Rename: convert underscores to spaces and sanitize
-            nice_name = best_match.stem.replace('_', ' ')
-            final_name = self.generate_shortcut_filename(nice_name)
+            final_name = self.generate_shortcut_filename(target_name)
             target_final_path = desktop_path / final_name
             
             best_match.rename(target_final_path)
@@ -248,8 +245,6 @@ class SteamService():
             print(f"[BACKEND] Renamed to: {target_final_path}")
         else:
             print(f"[BACKEND] No suitable .lnk file found (min distance={lowest_distance})")
-
-
         try:
             if os.path.exists(icon_png_path): os.remove(icon_png_path)
             if os.path.exists(icon_ico_path): os.remove(icon_ico_path)
@@ -266,18 +261,14 @@ class SteamService():
         ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_DESKTOPDIRECTORY, None, SHGFP_TYPE_CURRENT, buf)
         return Path(buf.value)
     
-    def sanitize_filename(self, name: str) -> str:
-        # Replace invalid characters for Windows filenames
-        return re.sub(r'[\\/:"*?<>|]+', '', name)
-
     def generate_shortcut_filename(self, app_name: str) -> str:
-        # Remove invalid characters, but preserve spaces
-        return self.sanitize_filename(app_name) + ".lnk"
-    
-    def sanitize_filename(self, name: str) -> str:
-        """Remove or replace invalid characters for Windows filenames"""
-        return re.sub(r'[\\/:"*?<>|]+', '_', name)
-   
+        print("awa ",app_name)
+        # 1. Reemplaza guiones bajos por espacios
+        app_name = app_name.replace('_', ' ')
+        print("awi ",app_name)
+        # 3. Devuelve con extensión
+        return app_name + ".lnk"
+       
     def refresh_desktop(self):
         """Force the Windows desktop to refresh"""
         SHCNE_ASSOCCHANGED = 0x08000000
@@ -286,24 +277,54 @@ class SteamService():
         ctypes.windll.shell32.SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, None, None)
 
     def delete_shortcut(self, app_name: str) -> dict:
+        from Levenshtein import distance as levenshtein_distance
+
         desktop_path = self.get_desktop_path()
 
+        # Intenta primero nombres exactos (igual que antes)
         possible_names = [
             f"{app_name}.lnk",
-            f"{app_name.replace(' ', '_')}.lnk"  # En caso de que aún no se haya renombrado
+            f"{app_name.replace(' ', '_')}.lnk"
         ]
 
-        deleted = False
-        for shortcut in possible_names:
-            shortcut_path = desktop_path / shortcut
+        for name in possible_names:
+            shortcut_path = desktop_path / name
             if shortcut_path.exists():
                 try:
                     shortcut_path.unlink()
-                    deleted = True
+                    print(f"[DELETE] Borrado exacto: {shortcut_path}")
+                    return {"success": True, "method": "exact", "match": name}
                 except Exception as e:
-                    return {"success": False, "error": f"No se pudo borrar el acceso directo: {e}"}
+                    return {"success": False, "error": f"Error al borrar acceso directo: {e}"}
 
-        if not deleted:
-            return {"success": False, "error": "Acceso directo no encontrado"}
+        # Buscar por similitud con Levenshtein (como en generate_shortcut)
+        best_match = None
+        lowest_distance = float('inf')
 
-        return {"success": True}
+        for file in desktop_path.glob("*.lnk"):
+            dist = levenshtein_distance(file.stem.lower(), app_name.lower())
+            if dist < lowest_distance:
+                best_match = file
+                lowest_distance = dist
+
+        MAX_DISTANCE = 10  # igual que en generate_shortcut
+
+        if best_match and lowest_distance <= MAX_DISTANCE:
+            try:
+                best_match.unlink()
+                print(f"[DELETE] Borrado por similitud: {best_match} (distancia={lowest_distance})")
+                return {
+                    "success": True,
+                    "method": "levenshtein",
+                    "match": best_match.name,
+                    "distance": lowest_distance
+                }
+            except Exception as e:
+                return {"success": False, "error": f"Error al borrar por similitud: {e}"}
+
+        return {
+            "success": False,
+            "error": "No se encontró acceso directo similar",
+            "closest_match": best_match.name if best_match else None,
+            "distance": lowest_distance
+        }

@@ -8,4 +8,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
 contextBridge.exposeInMainWorld('api', {
     saveData: (data) => ipcRenderer.invoke('save-data', data),
     loadData: () => ipcRenderer.invoke('load-data'),
+    deleteShortcut: (appName) => ipcRenderer.invoke('delete-shortcut', appName),
 });
