@@ -10,7 +10,6 @@ import tempfile
 import time
 import requests
 from PIL import Image
-from backend.utils.window_hider import WindowHider
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -18,6 +17,7 @@ from selenium.common.exceptions import TimeoutException
 from pyshortcuts import make_shortcut
 from pathlib import Path
 from ctypes import wintypes
+from backend.core.window_hider import WindowHider
 
 class SteamService():
     STEAM_BASE_URL = "https://store.steampowered.com"

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "backend": "cd src && uvicorn backend.main:app",
+    "backend": "cd src && uvicorn backend.api.main:app",
     "ui": "npm start --prefix src/ui",
     "start-all": "concurrently -k -n BACKEND,UI -c red,cyan \"npm run backend\" \"npm run ui\""
   },

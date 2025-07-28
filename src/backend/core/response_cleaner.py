@@ -1,14 +1,14 @@
 # response_cleaner.py
 
-from io import BytesIO
 import json
 import re
+from io import BytesIO
 from PIL import Image
 from typing import List, Literal
 from bs4 import BeautifulSoup
-from backend.models.infinite_search_result import PriceInfo, InfiniteSearchResult
-from backend.models.paginated_search_result import PaginatedSearchResult
-from backend.models.suggestion_result import Suggestion
+from backend.models.entities.infinite_search_result import InfiniteSearchResult, PriceInfo
+from backend.models.entities.paginated_search_result import PaginatedSearchResult
+from backend.models.entities.suggestion_result import Suggestion
 
 class ResponseCleaner:
     

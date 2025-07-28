@@ -4,11 +4,11 @@ from io import BytesIO
 from PIL import Image
 from fastapi import FastAPI, Query, Path, HTTPException, Body
 from fastapi.responses import StreamingResponse
-from backend.models.shortcut_request import ShortcutRequest
-from backend.steam_service import SteamService
-from backend.utils.response_cleaner import ResponseCleaner
+from backend.core.response_cleaner import ResponseCleaner
+from backend.models.dto.shortcut_request import ShortcutRequest
+from backend.services.steam_service import SteamService
 from fastapi.middleware.cors import CORSMiddleware
-from backend.mongo_client import MongoGameIconsClient
+from backend.infraestructure.mongo_client import MongoGameIconsClient
 
 app = FastAPI(
     title="Steam Service API",
