@@ -9,6 +9,8 @@ from backend.steam_service import SteamService
 from backend.utils.response_cleaner import ResponseCleaner
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from backend.mongo_client import MongoGameIconsClient
+
 
 
 app = FastAPI(
@@ -27,6 +29,7 @@ app.add_middleware(
 
 steam = SteamService()
 response_cleaner = ResponseCleaner()
+mongo_client = MongoGameIconsClient()
 
 class ShortcutRequest(BaseModel):
     app_name: str
@@ -54,11 +57,21 @@ async def infinite_search(term: str = Query(...)):
 
 # ---------- 4. Página de una app ----------
 @app.get("/app_icon_url/{app_id}")
-async def get_app_icon_url(
-    app_id: str = Path(...)
-):
+async def get_app_icon_url(app_id: str = Path(...)):
+    print("aaaa")
+    cached = mongo_client.get_by_id(app_id)
+    print("cached",cached)
+    if cached and "icon_url" in cached:
+        return cached["icon_url"]
+
     response = steam.get_app_page(app_id)
-    return response_cleaner.extract_icon_url(response)
+    icon_url = response_cleaner.extract_icon_url(response)
+    if icon_url:
+        print("icon_url",icon_url)
+        mongo_client.insert_icon({"id": app_id, "icon_url": icon_url})
+        return icon_url
+    else:
+        raise HTTPException(status_code=404, detail="Icon URL no encontrada")
 
 # ---------- 5. Imagen de una app ----------
 @app.get("/app/image")
@@ -74,25 +87,21 @@ async def get_app_image(
 
 # ---------- 6. Imagen de una app ----------
 @app.get("/app/{app_id}/icon")
-async def get_app_icon_image(
-    app_id: str = Path(...)
-):
-    response = steam.get_app_page(app_id)
-    icon_url = response_cleaner.extract_icon_url(response)
-
-    if not icon_url:
-        raise HTTPException(status_code=404, detail="Icon URL no encontrada")
+async def get_app_icon_image(app_id: str = Path(...)):
+    cached = mongo_client.get_by_id(app_id)
+    if cached and "icon_url" in cached:
+        icon_url = cached["icon_url"]
+    else:    
+        response = steam.get_app_page(app_id)
+        icon_url = response_cleaner.extract_icon_url(response)
+        if not icon_url:
+            raise HTTPException(status_code=404, detail="Icon URL no encontrada")
+        mongo_client.insert_icon({"id": app_id, "icon_url": icon_url})
 
     image_stream = steam.get_image_stream(icon_url)
     if image_stream is None:
         raise HTTPException(status_code=404, detail="Imagen no encontrada")
 
-    # Opcional: convertir a .ico si no lo es
-    content_type = "image/x-icon"
-    filename = f"{app_id}.ico"
-
-    # Si el icon_url ya termina en .ico o el header ya es image/x-icon, lo puedes devolver tal cual.
-    # Si no, lo convertimos a .ico usando PIL:
     content = image_stream.read()
     img = Image.open(BytesIO(content))
     ico_bytes = BytesIO()
@@ -100,9 +109,9 @@ async def get_app_icon_image(
     ico_bytes.seek(0)
 
     headers = {
-        "Content-Disposition": f"attachment; filename={filename}"
+        "Content-Disposition": f"attachment; filename={app_id}.ico"
     }
-    return StreamingResponse(ico_bytes, media_type=content_type, headers=headers)
+    return StreamingResponse(ico_bytes, media_type="image/x-icon", headers=headers)
 
 
 # ---------- 7. Small game icon ----------
@@ -119,11 +128,27 @@ async def generate_shortcut(
     data: ShortcutRequest = Body(...)
 ):
     app_name = data.app_name
-    response = steam.get_app_page(app_id)
-    icon_url = response_cleaner.extract_icon_url(response)
-    if not icon_url:
-        return {"success": False, "error": "No se pudo obtener el icono"}
 
+    # 1. Intentar buscar en MongoDB
+    cached_icon = mongo_client.get_by_id(app_id)
+    if cached_icon and "icon_url" in cached_icon:
+        icon_url = cached_icon["icon_url"]
+        print(f"Icono obtenido de MongoDB para {app_id}")
+    else:
+        # 2. Si no existe, obtener desde SteamDB
+        response = steam.get_app_page(app_id)
+        icon_url = response_cleaner.extract_icon_url(response)
+        if not icon_url:
+            return {"success": False, "error": "No se pudo obtener el icono"}
+        
+        # 3. Guardar en MongoDB
+        mongo_client.insert_icon({
+            "id": app_id,
+            "icon_url": icon_url
+        })
+        print(f"Icono insertado en MongoDB para {app_id}")
+
+    # 4. Generar el acceso directo
     result = steam.generate_shortcut(app_name, icon_url)
     if result["success"]:
         return {"detail": "Shortcut created"}

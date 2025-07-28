@@ -17,16 +17,17 @@ export function renderItems() {
 
 export async function loadInitialItems() {
     try {
-        let res = await fetch('http://localhost:8000/search/paginated?term=&start=0&count=20');
+        // Intenta con retry inteligente
+        let res = await fetchWithRetry('http://localhost:8000/search/paginated?term=&start=0&count=20');
         let data = await res.json();
-        
+
         // Fallback a /suggest si está vacío
         if (!Array.isArray(data) || data.length < 3) {
-            console.warn('Paginated search is empty, using suggest instead.');
-            const suggestRes = await fetch('http://localhost:8000/suggest?term=');
+            console.warn('Paginated search is empty, usando sugerencias...');
+            const suggestRes = await fetchWithRetry('http://localhost:8000/suggest?term=');
             data = await suggestRes.json();
         }
-        
+
         items = data
             .filter(item => item.type === "app")
             .map(item => ({
@@ -37,11 +38,25 @@ export async function loadInitialItems() {
                 owned: false,
                 sent: false
             }));
-        
+
         filteredItems = [...items];
     } catch (err) {
-        console.error('Error al cargar items iniciales:', err);
+        console.error('❌ Error al cargar items iniciales:', err);
+        alert("No se pudo conectar con el backend. Asegúrate de que esté iniciado en http://localhost:8000");
     }
+}
+
+async function fetchWithRetry(url, retries = 10, delay = 500) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const res = await fetch(url);
+            if (res.ok) return res;
+        } catch (e) {
+            console.warn(`⏳ Esperando backend... intento ${i + 1}/${retries}`);
+        }
+        await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    throw new Error(`❌ No se pudo conectar al backend en ${url}`);
 }
 
 export async function handleSearch() {
