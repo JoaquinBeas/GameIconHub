@@ -73,7 +73,7 @@ class WindowHider:
             return True
 
         except Exception as e:
-            print(f"Error hiding Chrome: {e}")
+            print(f"Error hiding Chrome")
             return False
 
     def create_hidden_startupinfo(self):

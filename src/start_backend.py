@@ -22,16 +22,12 @@ def write_port_config(port):
     try:
         with open(config_path, 'w') as f:
             json.dump(config, f, indent=2)
-        print(f"✅ Configuración guardada en: {config_path}")
     except Exception as e:
-        print(f"⚠️ Error guardando configuración: {e}")
+        print(f"Error guardando configuración")
 
 if __name__ == "__main__":
     port = find_free_port()
     write_port_config(port)
-    print(f"🚀 Iniciando servidor en puerto {port}")
-    
-    # Importar la app de FastAPI
     from backend.api.main import app
     
     uvicorn.run(app, host="127.0.0.1", port=port)

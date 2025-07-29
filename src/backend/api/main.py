@@ -7,8 +7,10 @@ from io import BytesIO
 from PIL import Image
 from fastapi import FastAPI, Query, Path, HTTPException, Body
 from fastapi.responses import StreamingResponse
+from backend.core.image_helper import ImageHelper
 from backend.core.response_cleaner import ResponseCleaner
 from backend.models.dto.shortcut_request import ShortcutRequest
+from backend.services.shortcut_service import ShortcutService
 from backend.services.steam_service import SteamService
 from fastapi.middleware.cors import CORSMiddleware
 from backend.infraestructure.mongo_client import MongoGameIconsClient
@@ -44,12 +46,13 @@ def write_port_config(port):
     try:
         with open(config_path, 'w') as f:
             json.dump(config, f, indent=2)
-        print(f"✅ Configuración guardada en: {config_path}")
     except Exception as e:
-        print(f"⚠️ Error guardando configuración: {e}")
+        print(f"Error guardando configuración")
 
-steam_client = SteamService()
 response_cleaner = ResponseCleaner()
+image_helper = ImageHelper()
+shortcut_service = ShortcutService()
+steam_client = SteamService()
 mongo_client = MongoGameIconsClient()
 
 # ---------- 0. Ping ----------
@@ -99,7 +102,7 @@ async def get_app_icon_url(app_id: str = Path(...)):
 async def get_app_image(
     url: str = Query(...)
 ):
-    image_stream = steam_client.get_image_stream(url)
+    image_stream = image_helper.get_image_stream(url)
     if image_stream is None:
         raise HTTPException(status_code=404, detail="Imagen no encontrada")
 
@@ -118,7 +121,7 @@ async def get_app_icon_image(app_id: str = Path(...)):
             raise HTTPException(status_code=404, detail="Icon URL no encontrada")
         mongo_client.insert_icon({"id": app_id, "icon_url": icon_url})
 
-    image_stream = steam_client.get_image_stream(icon_url)
+    image_stream = image_helper.get_image_stream(icon_url)
     if image_stream is None:
         raise HTTPException(status_code=404, detail="Imagen no encontrada")
 
@@ -161,7 +164,7 @@ async def generate_shortcut(
             "id": app_id,
             "icon_url": icon_url
         })
-    result = steam_client.generate_shortcut(app_name, icon_url)
+    result = shortcut_service.generate_shortcut(app_name, icon_url)
     if result["success"]:
         return {"detail": "Shortcut created"}
     else:
@@ -170,7 +173,7 @@ async def generate_shortcut(
 # ---------- 9. Delete desktop shortcut ----------   
 @app.delete("/app/delete_shortcut")
 async def delete_shortcut(data: ShortcutRequest = Body(...)):
-    result = steam_client.delete_shortcut(data.app_name)
+    result = shortcut_service.delete_shortcut(data.app_name)
     if result["success"]:
         return {"detail": "Shortcut eliminado"}
     else:
@@ -187,7 +190,7 @@ async def rename_shortcut(data: dict = Body(...)):
         raise HTTPException(status_code=400, detail="Both 'old_name' and 'new_name' are required")
 
     # Call service to rename the actual shortcut
-    result = steam_client.rename_shortcut(old_name, new_name)
+    result = shortcut_service.rename_shortcut(old_name, new_name)
 
     if result["success"]:
         return {"detail": "Shortcut renamed"}
