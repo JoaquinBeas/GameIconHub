@@ -1,36 +1,32 @@
-// components/OwnedItemList.js
 import { deleteDesktopShortcut } from "../controllers/itemController.js";
 import { getBackendUrl } from "../utils/backendConfig.js";
-// 🔥 VERSIÓN OPTIMIZADA: Sin flickering, solo actualiza cuando hay cambios reales
+
+// 🔥 OPTIMIZED VERSION: No flickering, only updates when real changes occur
 let persistentOwnedItems = [];
-let lastRenderedHash = ''; // Hash para detectar cambios reales
+let lastRenderedHash = ''; // Used to detect real state changes
 
 export async function renderOwnedItems(forceUpdate = false) {
-  // 📖 Carga desde persistencia solo si es necesario
+  // 📖 Load from persistence only if necessary
   await loadOwnedItemsFromPersistence();
 
-  // 🔍 Genera hash del estado actual para detectar cambios
+  // 🔍 Generate hash to detect state changes
   const currentHash = generateItemsHash(persistentOwnedItems);
 
-  // ⚡ Si no hay cambios y no es forzado, no hace nada
-  if (!forceUpdate && currentHash === lastRenderedHash) {
-    return;
-  }
+  // ⚡ Skip rendering if nothing has changed and update isn't forced
+  if (!forceUpdate && currentHash === lastRenderedHash) return;
 
   const ownedItemsList = document.getElementById('ownedItemsList');
 
-  // 🎨 Renderizado suave sin limpiar todo
+  // 🎨 Smooth rendering without clearing everything
   await renderItemsSmooth(ownedItemsList);
 
-  // 💾 Actualiza el hash guardado
+  // 💾 Save current hash
   lastRenderedHash = currentHash;
 }
 
 export async function removeItemFromOwnedList(itemId) {
   const item = persistentOwnedItems.find(i => i.id === itemId);
-  if (item) {
-    await deleteDesktopShortcut(item.name);
-  }
+  if (item) await deleteDesktopShortcut(item.name);
   persistentOwnedItems = persistentOwnedItems.filter(i => i.id !== itemId);
   await saveOwnedItemsToPersistence();
   await renderOwnedItems();
@@ -40,22 +36,17 @@ export function isItemOwned(itemId) {
   return persistentOwnedItems.some(item => item.id === itemId);
 }
 
-
-// 🎨 Renderizado suave que no causa flickering
+// 🎨 Smooth rendering that avoids flickering
 async function renderItemsSmooth(container) {
   const existingItems = Array.from(container.querySelectorAll('.owned-item, .no-items-message'));
   const existingIds = existingItems.map(el => el.dataset.itemId).filter(Boolean);
 
-  // 📝 Caso especial: lista vacía
+  // 📝 Handle empty list case
   if (persistentOwnedItems.length === 0) {
-    // Elimina items existentes con animación
     existingItems.forEach(el => {
-      if (!el.classList.contains('no-items-message')) {
-        slideOutAndRemove(el);
-      }
+      if (!el.classList.contains('no-items-message')) slideOutAndRemove(el);
     });
 
-    // Muestra mensaje si no existe
     if (!container.querySelector('.no-items-message')) {
       const msg = createEmptyMessage();
       container.appendChild(msg);
@@ -64,43 +55,35 @@ async function renderItemsSmooth(container) {
     return;
   }
 
-  // 🗑️ Elimina mensaje vacío si existe
+  // 🗑️ Remove "empty" message if present
   const emptyMsg = container.querySelector('.no-items-message');
-  if (emptyMsg) {
-    slideOutAndRemove(emptyMsg);
-  }
+  if (emptyMsg) slideOutAndRemove(emptyMsg);
 
   const currentIds = persistentOwnedItems.map(item => item.id);
 
-  // 🔄 Actualiza items existentes y agrega nuevos
-  const itemsToProcess = [...persistentOwnedItems];
-
-  for (const item of itemsToProcess) {
+  // 🔄 Update existing items or append new ones
+  for (const item of persistentOwnedItems) {
     const existingElement = container.querySelector(`[data-item-id="${item.id}"]`);
 
     if (existingElement) {
-      // 🔄 Actualiza item existente solo si es necesario
-      updateExistingItem(existingElement, item);
+      updateExistingItem(existingElement, item); // Update if necessary
     } else {
-      // ➕ Agrega nuevo item con animación
-      const newElement = createItemElement(item);
+      const newElement = createItemElement(item); // Add new item
       container.appendChild(newElement);
       slideIn(newElement);
     }
   }
 
-  // 🗑️ Elimina items que ya no están con animación
+  // 🗑️ Remove stale items
   existingIds.forEach(id => {
     if (id && !currentIds.includes(id)) {
       const elementToRemove = container.querySelector(`[data-item-id="${id}"]`);
-      if (elementToRemove) {
-        slideOutAndRemove(elementToRemove);
-      }
+      if (elementToRemove) slideOutAndRemove(elementToRemove);
     }
   });
 }
 
-// 🏗️ Crea un elemento de item
+// 🏗️ Creates a visual item element
 function createItemElement(item) {
   const div = document.createElement('div');
   div.className = 'owned-item';
@@ -108,7 +91,7 @@ function createItemElement(item) {
   div.style.display = 'flex';
   div.style.alignItems = 'center';
   div.style.justifyContent = 'space-between';
-  div.style.opacity = '0'; // Para animación de entrada
+  div.style.opacity = '0';
   div.style.transform = 'translateX(-10px)';
   div.style.transition = 'all 0.2s ease-in-out';
 
@@ -132,30 +115,29 @@ function createItemElement(item) {
   return div;
 }
 
-// 🔄 Actualiza un item existente solo si es necesario
+// 🔄 Updates text content of an item element if changed
 function updateExistingItem(element, item) {
   const textElement = element.querySelector('.item-text');
   const currentImgSrc = textElement.querySelector('img')?.src || '';
   const newImgSrc = item.smallIcon || item.img || '';
   const currentName = textElement.querySelector('span')?.textContent || '';
 
-  // Solo actualiza si hay cambios reales
   if (currentImgSrc !== newImgSrc || currentName !== item.name) {
     updateItemText(textElement, item);
   }
 }
 
-// 📝 Actualiza el contenido de texto de un item
+// 📝 Updates inner HTML of item text
 function updateItemText(textElement, item) {
   const imgSrc = item.smallIcon || item.img || '';
   textElement.innerHTML = `
-      <img class="owned-item-icon" src="${imgSrc}" alt="${item.name}" 
-          style="width:22px;height:22px;margin-right:6px;vertical-align:middle;" />
-      <span>${item.name}</span>
-    `;
+    <img class="owned-item-icon" src="${imgSrc}" alt="${item.name}"
+         style="width:22px;height:22px;margin-right:6px;vertical-align:middle;" />
+    <span>${item.name}</span>
+  `;
 }
 
-// 🗑️ Crea botón de eliminar
+// 🗑️ Creates the delete button
 function createDeleteButton(item) {
   const btn = document.createElement('button');
   btn.className = 'owned-delete-btn';
@@ -171,24 +153,17 @@ function createDeleteButton(item) {
 
   btn.addEventListener('click', async (e) => {
     e.stopPropagation();
-    await deleteDesktopShortcut(item.name); // <- Asumiendo que `item.name` es `app_name`
+    await deleteDesktopShortcut(item.name);
     persistentOwnedItems = persistentOwnedItems.filter(i => i.id !== item.id);
-
-    // 💾 Guarda los cambios
     await saveOwnedItemsToPersistence();
-
-    // 🔄 Re-renderiza de forma suaveremoveItemFromOwnedList
     renderOwnedItems();
-    import('../controllers/itemController.js').then(module => {
-      module.renderItems(); // fuerza re-render de los ItemCards
-    });
-
+    import('../controllers/itemController.js').then(module => module.renderItems());
   });
 
   return btn;
 }
 
-// 📝 Crea mensaje de lista vacía
+// 📝 Creates a "no items" placeholder
 function createEmptyMessage() {
   const msg = document.createElement('div');
   msg.className = 'no-items-message';
@@ -202,7 +177,7 @@ function createEmptyMessage() {
   return msg;
 }
 
-// 🎬 Animación de entrada
+// 🎬 Entry animation
 function slideIn(element) {
   requestAnimationFrame(() => {
     element.style.opacity = '1';
@@ -210,32 +185,28 @@ function slideIn(element) {
   });
 }
 
-// 🎬 Animación de salida y eliminación
+// 🎬 Exit animation and removal
 function slideOutAndRemove(element) {
   element.style.opacity = '0';
   element.style.transform = 'translateX(-10px)';
-
   setTimeout(() => {
-    if (element.parentNode) {
-      element.parentNode.removeChild(element);
-    }
+    if (element.parentNode) element.parentNode.removeChild(element);
   }, 200);
 }
 
-// 🔍 Genera hash para detectar cambios
+// 🔍 Generates hash to detect changes
 function generateItemsHash(items) {
   return items.map(item => `${item.id}-${item.name}-${item.smallIcon || item.img || ''}`).join('|');
 }
 
-// 📖 Carga items owned desde la persistencia (con cache para evitar lecturas innecesarias)
+// 📖 Loads owned items from persistence (with caching)
 let lastLoadTime = 0;
 let loadCache = null;
-const CACHE_DURATION = 1000; // 1 segundo de cache
+const CACHE_DURATION = 1000; // 1 second cache
 
 export async function loadOwnedItemsFromPersistence() {
   const now = Date.now();
 
-  // Usa cache si es reciente
   if (loadCache && (now - lastLoadTime) < CACHE_DURATION) {
     persistentOwnedItems = loadCache;
     return;
@@ -256,16 +227,16 @@ export async function loadOwnedItemsFromPersistence() {
   }
 }
 
-// 💾 Guarda items owned a la persistencia
+// 💾 Saves owned items to persistence
 async function saveOwnedItemsToPersistence() {
   try {
     const currentData = await window.api.loadData();
     await window.api.saveData({
-      encryptedGuid: currentData.encryptedGuid || '', // conservar
+      encryptedGuid: currentData.encryptedGuid || '',
       ownedItems: persistentOwnedItems
     });
 
-    // Invalida el cache para forzar recarga en la próxima lectura
+    // Invalidate cache to force fresh load next time
     loadCache = null;
     lastLoadTime = 0;
   } catch (error) {
@@ -273,13 +244,11 @@ async function saveOwnedItemsToPersistence() {
   }
 }
 
-// 🆕 Nueva función para agregar un item a la sidebar (llamada desde itemController)
+// 🆕 Adds a new item to the owned sidebar list
 export async function addItemToOwnedList(newItem) {
-  // Verifica si ya existe
   const exists = persistentOwnedItems.some(item => item.id === newItem.id);
   if (exists) return;
 
-  // 🏷️ Agrega al cache local
   persistentOwnedItems.push({
     id: newItem.id,
     name: newItem.name,
@@ -287,37 +256,29 @@ export async function addItemToOwnedList(newItem) {
     smallIcon: newItem.smallIcon || ''
   });
 
-  // 💾 Guarda inmediatamente
   await saveOwnedItemsToPersistence();
-
-  // 🔄 Re-renderiza de forma suave
   renderOwnedItems();
 }
 
-// 🔄 Función para actualizar un item existente (ej: cuando se obtiene smallIcon)
+// 🔄 Updates properties of an existing item (e.g. adds smallIcon)
 export async function updateOwnedItem(itemId, updates) {
   const itemIndex = persistentOwnedItems.findIndex(item => item.id === itemId);
   if (itemIndex === -1) return;
 
-  // Actualiza las propiedades
   persistentOwnedItems[itemIndex] = { ...persistentOwnedItems[itemIndex], ...updates };
-
-  // 💾 Guarda cambios
   await saveOwnedItemsToPersistence();
-
-  // 🔄 Re-renderiza de forma suave
   renderOwnedItems();
 }
 
+// Tooltip handling for long names
 function addTextView(text, item) {
   let tooltipTimeout;
-  text.addEventListener('mouseenter', function (e) {
+  text.addEventListener('mouseenter', function () {
     if (this.scrollWidth > this.offsetWidth) {
       tooltipTimeout = setTimeout(() => {
-        let tooltip = document.createElement('div');
+        const tooltip = document.createElement('div');
         tooltip.className = 'owned-tooltip-global show';
         tooltip.textContent = item.name;
-
         document.body.appendChild(tooltip);
 
         const rect = this.getBoundingClientRect();
@@ -329,16 +290,17 @@ function addTextView(text, item) {
           tooltip.style.left = pad + 'px';
         if (rect.left + rect.width / 2 + tooltip.offsetWidth / 2 > window.innerWidth)
           tooltip.style.left = (window.innerWidth - tooltip.offsetWidth - pad) + 'px';
-
       }, 300);
     }
   });
-  text.addEventListener('mouseleave', function (e) {
+
+  text.addEventListener('mouseleave', function () {
     clearTimeout(tooltipTimeout);
     document.querySelectorAll('.owned-tooltip-global').forEach(el => el.remove());
   });
 }
 
+// Opens the item context card with rename/delete options
 function openItemCard(item, x, y) {
   const existing = document.querySelector('.card');
   if (existing) existing.remove();

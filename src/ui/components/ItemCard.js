@@ -6,8 +6,9 @@ import { removeItemFromOwnedList, isItemOwned } from '../components/OwnedItemLis
 export function createItemCard(item) {
     const card = document.createElement('div');
     card.className = 'item-card';
-    // En ItemCard.js (dentro de createItemCard)
-    const favId = `favorite-${item.id}`; // Asegura ID único por card
+
+    // Ensure a unique ID for the favorite checkbox per card
+    const favId = `favorite-${item.id}`;
 
     card.innerHTML = `
         <div class="item-picture">${item.picture}</div>
@@ -37,6 +38,7 @@ export function createItemCard(item) {
             </button>
         </div>
     `;
+
     const favLabel = card.querySelector('.fav-btn-label');
     const favIconSpan = favLabel.querySelector('.fav-btn-icon');
     let isFav = isItemOwned(item.id);
@@ -46,6 +48,7 @@ export function createItemCard(item) {
 
     favIconSpan.innerHTML = isFav ? svgOff : svgOn;
 
+    // Toggle favorite button click
     favLabel.addEventListener('click', async (e) => {
         e.preventDefault();
         isFav = !isFav;

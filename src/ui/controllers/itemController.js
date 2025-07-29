@@ -1,12 +1,13 @@
 // controllers/itemController.js
 import { createItemCard } from '../components/ItemCard.js';
 import { renderOwnedItems } from '../components/OwnedItemList.js';
-import { addItemToOwnedList, updateOwnedItem } from '../components/OwnedItemList.js'; // 🆕 Importar
+import { addItemToOwnedList, updateOwnedItem } from '../components/OwnedItemList.js'; // Import
 import { getBackendUrl } from '../utils/backendConfig.js';
 
 export let items = [];
 export let filteredItems = [];
 
+// Renders the filtered items into the container
 export function renderItems() {
     const container = document.getElementById('itemsContainer');
     container.innerHTML = '';
@@ -16,17 +17,18 @@ export function renderItems() {
     });
 }
 
+// Loads the initial items from the backend
 export async function loadInitialItems() {
     try {
         const baseUrl = await getBackendUrl();
 
-        // Intenta con retry inteligente
+        // Try smart retry on paginated endpoint
         let res = await fetchWithRetry(`${baseUrl}/search/paginated?term=&start=0&count=20`);
         let data = await res.json();
 
-        // Fallback a /suggest si está vacío
+        // Fallback to /suggest if result is too small
         if (!Array.isArray(data) || data.length < 3) {
-            console.warn('Paginated search is empty, usando sugerencias...');
+            console.warn('Paginated search is empty, falling back to suggestions...');
             const suggestRes = await fetchWithRetry(`${baseUrl}/suggest?term=`);
             data = await suggestRes.json();
         }
@@ -44,24 +46,26 @@ export async function loadInitialItems() {
 
         filteredItems = [...items];
     } catch (err) {
-        console.error('❌ Error al cargar items iniciales:', err);
-        alert("No se pudo conectar con el backend. Asegúrate de que esté iniciado.");
+        console.error('❌ Error loading initial items:', err);
+        alert("Could not connect to the backend. Make sure it is running.");
     }
 }
 
+// Retry wrapper for fetch with delay and retries
 async function fetchWithRetry(url, retries = 10, delay = 500) {
     for (let i = 0; i < retries; i++) {
         try {
             const res = await fetch(url);
             if (res.ok) return res;
         } catch (e) {
-            console.warn(`⏳ Esperando backend... intento ${i + 1}/${retries}`);
+            console.warn(`⏳ Waiting for backend... attempt ${i + 1}/${retries}`);
         }
         await new Promise(resolve => setTimeout(resolve, delay));
     }
-    throw new Error(`❌ No se pudo conectar al backend en ${url}`);
+    throw new Error(`❌ Could not connect to backend at ${url}`);
 }
 
+// Handles the search input and results
 export async function handleSearch() {
     const searchInput = document.getElementById('searchInput');
     const searchTerm = searchInput.value.trim();
@@ -74,7 +78,7 @@ export async function handleSearch() {
         let res = await fetch(url);
         let data = await res.json();
 
-        // Fallback a /suggest si vacío
+        // Fallback to suggest if result is too small
         if (!Array.isArray(data) || data.length < 3) {
             console.warn('Search returned empty. Trying /suggest...');
             const fallbackRes = await fetch(`${baseUrl}/suggest?term=${query}`);
@@ -96,10 +100,11 @@ export async function handleSearch() {
         renderItems();
         renderOwnedItems(items, filteredItems, renderItems);
     } catch (err) {
-        console.error('Error al buscar juegos:', err);
+        console.error('Error searching for games:', err);
     }
 }
 
+// Handles sending an item to the desktop (creates a shortcut)
 export async function sendToDesktop(button, itemId) {
     const item = items.find(i => i.id === itemId);
     if (!item || button.classList.contains('sent')) return;
@@ -110,14 +115,14 @@ export async function sendToDesktop(button, itemId) {
 
     const baseUrl = await getBackendUrl();
 
-    // 🆕 Agrega a la sidebar independiente
+    // 🆕 Add to the independent sidebar list
     const itemForSidebar = {
         id: item.id,
         name: item.name,
         img: item.picture?.match(/src="([^"]+)"/)?.[1] || ''
     };
 
-    // 👇 Obtén el smallIcon del backend
+    // 👇 Fetch the small icon from backend
     try {
         const res = await fetch(`${baseUrl}/app/${itemId}/small_icon_url`);
         const data = await res.json();
@@ -128,8 +133,9 @@ export async function sendToDesktop(button, itemId) {
         console.warn('Could not load small icon for app:', itemId, err);
     }
 
-    // 🏷️ Agrega a la sidebar (independiente)
+    // 🏷️ Add item to sidebar
     await addItemToOwnedList(itemForSidebar);
+
     try {
         await fetch(`${baseUrl}/app/${item.id}/generate_shortcut`, {
             method: "POST",
@@ -138,12 +144,12 @@ export async function sendToDesktop(button, itemId) {
                 app_name: item.name
             })
         });
-
     } catch (err) {
         console.warn('Could not create shortcut on desktop:', err);
     }
 }
 
+// Handles download button click for an item
 export async function downloadItem(itemId) {
     const item = items.find(i => i.id === itemId);
     if (!item) return;
@@ -157,21 +163,19 @@ export async function downloadItem(itemId) {
     try {
         await downloadImage(itemId);
 
-        // Hide loading and show completed state
+        // Mark as completed
         hideLoadingState(card);
         showCompletedState(card);
 
         console.log(`Image for ${item.name} downloaded successfully`);
     } catch (error) {
-        // Hide loading state on error
         hideLoadingState(card);
         console.error(`Error downloading image for ${item.name}:`, error);
-
-        // Optionally show error state
         showErrorState(card);
     }
 }
 
+// Requests backend to delete a shortcut
 export async function deleteDesktopShortcut(appName) {
     try {
         const result = await window.api.deleteShortcut(appName);
@@ -185,7 +189,7 @@ export async function deleteDesktopShortcut(appName) {
     }
 }
 
-// Browser-compatible image download function
+// Browser-compatible file downloader
 async function downloadImage(itemId) {
     try {
         const baseUrl = await getBackendUrl();
@@ -201,7 +205,7 @@ async function downloadImage(itemId) {
         const link = document.createElement('a');
         link.href = downloadUrl;
 
-        // Cambia aquí la extensión a .ico
+        // Change the extension to .ico
         const item = items.find(i => i.id === itemId);
         const filename = item ? `${item.name.replace(/[^a-z0-9]/gi, '_')}.ico` : `${itemId}.ico`;
         link.download = filename;
@@ -217,12 +221,10 @@ async function downloadImage(itemId) {
     }
 }
 
-// Loading state management functions
+// Shows a full-screen loader
 function showLoadingState(card) {
-    // Add downloading class to prevent multiple clicks
     card.classList.add('downloading');
 
-    // Create and show the full-screen loader
     const loader = document.createElement('div');
     loader.className = 'loader';
     loader.id = 'downloadLoader';
@@ -230,27 +232,23 @@ function showLoadingState(card) {
         <div class="justify-content-center jimu-primary-loading"></div>
     `;
 
-    // Add loader to body for full-screen coverage
     document.body.appendChild(loader);
-
-    // Disable scrolling
     document.body.style.overflow = 'hidden';
 }
 
+// Removes the loader and unlocks scroll
 function hideLoadingState(card) {
-    // Remove downloading class
     card.classList.remove('downloading');
 
-    // Remove the full-screen loader
     const loader = document.getElementById('downloadLoader');
     if (loader) {
         loader.remove();
     }
 
-    // Re-enable scrolling
     document.body.style.overflow = '';
 }
 
+// Marks the button as completed with a checkmark
 function showCompletedState(card) {
     card.classList.add('completed');
 
@@ -270,11 +268,10 @@ function showCompletedState(card) {
     if (icon2) icon2.style.display = 'none';
 }
 
+// Briefly marks the button as error
 function showErrorState(card) {
-    // Optionally add error styling or show error message
     card.style.borderColor = '#ff4444';
 
-    // Reset after 3 seconds
     setTimeout(() => {
         card.style.borderColor = '';
     }, 3000);

@@ -6,24 +6,40 @@ import { setupModalImageClick } from './components/Modal.js';
 import { renderOwnedItems, loadOwnedItemsFromPersistence } from './components/OwnedItemList.js';
 import { getBackendUrl } from './utils/backendConfig.js';
 
-async function init() {
-    wireWindowButtons();
-    setupMenu();
-    setupModalImageClick();
-    setupSearchHandlers();
+function wireWindowButtons() {
+    const actions = [
+        { id: 'minBtn', action: 'minimize' },
+        { id: 'maxBtn', action: 'toggle-max', async: true },
+        { id: 'closeBtn', action: 'close' }
+    ];
 
-    try {
-        await waitForBackend();
-    } catch (e) {
-        alert('❌ No se pudo conectar con el backend.');
-        return;
-    }
+    actions.forEach(({ id, action, async }) => {
+        const btn = document.getElementById(id);
+        console.log('window.electronAPI:', window.electronAPI);
 
-    hideLoadingOverlay();
-    await loadInitialItems();
-    await loadOwnedItemsFromPersistence();
-    renderItems();
-    await renderOwnedItems(true);
+        if (!btn) return;
+        btn.addEventListener('click', async () => {
+            console.log(`⏺️ Clicked: ${action}`);
+            const result = await window.electronAPI.winAction(action);
+            console.log(`✅ winAction("${action}") =>`, result);
+        });
+    });
+}
+
+function setupSearchHandlers() {
+    const searchButton = document.getElementById('searchButton');
+    const searchInput = document.getElementById('searchInput');
+
+    searchButton?.addEventListener('click', handleSearch);
+    searchInput?.addEventListener('input', handleSearch);
+    searchInput?.addEventListener('keypress', e => {
+        if (e.key === 'Enter') handleSearch();
+    });
+}
+
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.style.display = 'none';
 }
 
 async function waitForBackend(retries = 20, delay = 500) {
@@ -43,41 +59,25 @@ async function waitForBackend(retries = 20, delay = 500) {
     }
     throw new Error('Backend no respondió');
 }
-function wireWindowButtons() {
-    const actions = [
-        { id: 'minBtn', action: 'minimize' },
-        { id: 'maxBtn', action: 'toggle-max', async: true },
-        { id: 'closeBtn', action: 'close' }
-    ];
 
-    actions.forEach(({ id, action, async }) => {
-        const btn = document.getElementById(id);
-        console.log('🔍 window.electronAPI:', window.electronAPI);
+async function init() {
+    wireWindowButtons();
+    setupMenu();
+    setupModalImageClick();
+    setupSearchHandlers();
 
-        if (!btn) return;
-        btn.addEventListener('click', async () => {
-            console.log(`⏺️ Clicked: ${action}`);
-            const result = await window.electronAPI.winAction(action);
-            console.log(`✅ winAction("${action}") =>`, result);
-        });
-    });
-}
+    try {
+        await waitForBackend();
+    } catch (e) {
+        alert('❌ No se pudo conectar con el backend.');
+        return;
+    }
 
-function setupSearchHandlers() {
-    const events = ['click', 'input', 'keypress'];
-    const searchButton = document.getElementById('searchButton');
-    const searchInput = document.getElementById('searchInput');
-
-    searchButton?.addEventListener('click', handleSearch);
-    searchInput?.addEventListener('input', handleSearch);
-    searchInput?.addEventListener('keypress', e => {
-        if (e.key === 'Enter') handleSearch();
-    });
-}
-
-function hideLoadingOverlay() {
-    const overlay = document.getElementById('loadingOverlay');
-    if (overlay) overlay.style.display = 'none';
+    hideLoadingOverlay();
+    await loadInitialItems();
+    await loadOwnedItemsFromPersistence();
+    renderItems();
+    await renderOwnedItems(true);
 }
 
 document.addEventListener('DOMContentLoaded', init);

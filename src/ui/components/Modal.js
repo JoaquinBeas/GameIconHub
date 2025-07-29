@@ -5,6 +5,7 @@ export function setupModalImageClick() {
     const overlay = document.getElementById('modalOverlay');
     const modalPicture = document.getElementById('modalPicture');
 
+    // Show the modal when an item picture is clicked
     container.addEventListener('click', (e) => {
         if (e.target.classList.contains('item-picture')) {
             modalPicture.textContent = e.target.innerText;
@@ -12,6 +13,7 @@ export function setupModalImageClick() {
         }
     });
 
+    // Close the modal when clicking outside the image area
     overlay.addEventListener('click', (e) => {
         if (e.target.id === 'modalOverlay') {
             overlay.style.display = 'none';

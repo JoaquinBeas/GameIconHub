@@ -2,26 +2,23 @@
 
 let backendConfig = null;
 
-/**
- * Lee la configuración del backend desde el archivo JSON
- * @returns {Promise<{backend_port: number, backend_url: string}>}
- */
+// Reads the backend configuration from the JSON file
 export async function getBackendConfig() {
     if (backendConfig) {
         return backendConfig;
     }
 
     try {
-        // En Electron, puedes leer archivos usando fs
+        // In Electron, you can read files using fs
         if (window.fs && window.fs.readFile) {
-            console.log('Leyendo configuración del backend desde archivo JSON...');
+            console.log('Reading backend configuration from JSON file...');
             const configData = await window.fs.readFile('backend-config.json', { encoding: 'utf8' });
             backendConfig = JSON.parse(configData);
-            console.log("Config: ",backendConfig);
+            console.log("Config: ", backendConfig);
             return backendConfig;
         }
 
-        // Fallback: intentar fetch (para desarrollo web)
+        // Fallback: try fetch (for web development mode)
         const response = await fetch('/backend-config.json');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -30,8 +27,8 @@ export async function getBackendConfig() {
         return backendConfig;
 
     } catch (error) {
-        console.warn('⚠️ No se pudo leer la configuración del backend, usando puerto por defecto:', error);
-        // Fallback al puerto por defecto
+        console.warn('⚠️ Could not read backend configuration, falling back to default port:', error);
+        // Fallback to default port
         backendConfig = {
             backend_port: 8000,
             backend_url: 'http://127.0.0.1:8000'
@@ -40,18 +37,13 @@ export async function getBackendConfig() {
     }
 }
 
-/**
- * Obtiene la URL base del backend
- * @returns {Promise<string>}
- */
+// Gets the backend base URL
 export async function getBackendUrl() {
     const config = await getBackendConfig();
     return config.backend_url;
 }
 
-/**
- * Limpia la configuración en caché (útil para recargas)
- */
+// Clears the cached configuration (useful for reloads)
 export function clearBackendConfigCache() {
     backendConfig = null;
 }
