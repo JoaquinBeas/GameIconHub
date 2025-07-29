@@ -418,7 +418,7 @@ function openItemCard(item, x, y) {
           })
         });
       } catch (err) {
-        console.error("❌ Error renaming shortcut on backend:", err);
+        console.error("Error renaming shortcut on backend:", err);
       }
 
       form.remove();

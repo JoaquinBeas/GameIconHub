@@ -46,7 +46,7 @@ export async function loadInitialItems() {
 
         filteredItems = [...items];
     } catch (err) {
-        console.error('❌ Error loading initial items:', err);
+        console.error('Error loading initial items:', err);
         alert("Could not connect to the backend. Make sure it is running.");
     }
 }
@@ -58,7 +58,7 @@ async function fetchWithRetry(url, retries = 10, delay = 500) {
             const res = await fetch(url);
             if (res.ok) return res;
         } catch (e) {
-            console.warn(`⏳ Waiting for backend... attempt ${i + 1}/${retries}`);
+            console.warn(`Waiting for backend... attempt ${i + 1}/${retries}`);
         }
         await new Promise(resolve => setTimeout(resolve, delay));
     }
@@ -167,7 +167,6 @@ export async function downloadItem(itemId) {
         hideLoadingState(card);
         showCompletedState(card);
 
-        console.log(`Image for ${item.name} downloaded successfully`);
     } catch (error) {
         hideLoadingState(card);
         console.error(`Error downloading image for ${item.name}:`, error);
@@ -180,12 +179,11 @@ export async function deleteDesktopShortcut(appName) {
     try {
         const result = await window.api.deleteShortcut(appName);
         if (result.success) {
-            console.log('🗑️ Shortcut deleted successfully');
         } else {
-            console.warn('⚠️ Failed to delete shortcut:', result.message);
+            console.warn('Failed to delete shortcut:', result.message);
         }
     } catch (err) {
-        console.error('❌ Error deleting shortcut:', err);
+        console.error('Error deleting shortcut:', err);
     }
 }
 

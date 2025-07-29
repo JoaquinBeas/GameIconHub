@@ -15,13 +15,9 @@ function wireWindowButtons() {
 
     actions.forEach(({ id, action, async }) => {
         const btn = document.getElementById(id);
-        console.log('window.electronAPI:', window.electronAPI);
-
         if (!btn) return;
         btn.addEventListener('click', async () => {
-            console.log(`⏺️ Clicked: ${action}`);
             const result = await window.electronAPI.winAction(action);
-            console.log(`✅ winAction("${action}") =>`, result);
         });
     });
 }
@@ -49,11 +45,10 @@ async function waitForBackend(retries = 20, delay = 500) {
             const res = await fetch(`${baseUrl}/ping`);
             const data = await res.json();
             if (data.status === 'ok') {
-                console.log(`✅ Backend conectado en: ${baseUrl}`);
                 return true;
             }
         } catch (e) {
-            console.log(`⏳ Esperando backend (${i + 1}/${retries})...`);
+            console.error(`Esperando backend (${i + 1}/${retries})...`);
         }
         await new Promise(r => setTimeout(r, delay));
     }
@@ -69,7 +64,7 @@ async function init() {
     try {
         await waitForBackend();
     } catch (e) {
-        alert('❌ No se pudo conectar con el backend.');
+        alert('No se pudo conectar con el backend.');
         return;
     }
 

@@ -38,14 +38,11 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         // Absolute path to the backend-config.json file
         const configPath = path.join(__dirname, '..', '..', '..', 'backend-config.json');
-        console.log('Closing the application and deleting backend-config.json...');
-        console.log('Path to backend-config.json file:', configPath);
 
         // Check if the file exists and delete it
         if (fs.existsSync(configPath)) {
             try {
                 fs.unlinkSync(configPath);
-                console.log('backend-config.json file deleted.');
             } catch (err) {
                 console.error('Error deleting backend-config.json:', err);
             }

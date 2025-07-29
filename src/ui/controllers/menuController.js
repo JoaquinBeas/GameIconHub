@@ -115,7 +115,7 @@ export function setupMenu() {
                 document.getElementById('contributeModal').style.display = 'none';
                 e.target.reset();
             } else {
-                console.log("Error al enviar la contribución.");
+                console.error("Error al enviar la contribución.");
             }
         } catch (err) {
             console.error("Error en la contribución:", err);
@@ -165,7 +165,7 @@ export function setupMenu() {
                 document.getElementById('contactModal').style.display = 'none';
                 e.target.reset();
             } else {
-                console.log("Error al enviar el email.");
+                console.error("Error al enviar el email.");
             }
         } catch (err) {
             console.error("Error al conectar con el backend:", err);

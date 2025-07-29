@@ -11,10 +11,8 @@ export async function getBackendConfig() {
     try {
         // In Electron, you can read files using fs
         if (window.fs && window.fs.readFile) {
-            console.log('Reading backend configuration from JSON file...');
             const configData = await window.fs.readFile('backend-config.json', { encoding: 'utf8' });
             backendConfig = JSON.parse(configData);
-            console.log("Config: ", backendConfig);
             return backendConfig;
         }
 
@@ -27,7 +25,7 @@ export async function getBackendConfig() {
         return backendConfig;
 
     } catch (error) {
-        console.warn('⚠️ Could not read backend configuration, falling back to default port:', error);
+        console.warn('Could not read backend configuration, falling back to default port:', error);
         // Fallback to default port
         backendConfig = {
             backend_port: 8000,

@@ -24,7 +24,7 @@ function setupIPC() {
     ipcMain.handle('win-action', (event, action) => {
         const win = BrowserWindow.fromWebContents(event.sender);
         if (!win) {
-            console.error('❌ Could not retrieve the window');
+            console.error('Could not retrieve the window');
             return false;
         }
 
@@ -87,14 +87,13 @@ function setupIPC() {
 
             if (fs.existsSync(shortcutPath)) {
                 fs.unlinkSync(shortcutPath);
-                console.log(`🗑️ Deleted shortcut: ${shortcutPath}`);
                 return { success: true };
             } else {
-                console.warn(`⚠️ Shortcut not found: ${shortcutPath}`);
+                console.warn(`Shortcut not found: ${shortcutPath}`);
                 return { success: false, message: 'Shortcut not found' };
             }
         } catch (err) {
-            console.error('❌ Error deleting shortcut:', err);
+            console.error('Error deleting shortcut:', err);
             return { success: false, message: err.message };
         }
     });
