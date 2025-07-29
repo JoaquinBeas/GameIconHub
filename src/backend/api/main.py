@@ -9,7 +9,9 @@ from fastapi import FastAPI, Query, Path, HTTPException, Body
 from fastapi.responses import StreamingResponse
 from backend.core.image_helper import ImageHelper
 from backend.core.response_cleaner import ResponseCleaner
+from backend.models.dto.contact_request import ContactRequest
 from backend.models.dto.shortcut_request import ShortcutRequest
+from backend.services.email_service import EmailService
 from backend.services.shortcut_service import ShortcutService
 from backend.services.steam_service import SteamService
 from fastapi.middleware.cors import CORSMiddleware
@@ -53,6 +55,7 @@ response_cleaner = ResponseCleaner()
 image_helper = ImageHelper()
 shortcut_service = ShortcutService()
 steam_client = SteamService()
+email_service = EmailService()
 mongo_client = MongoGameIconsClient()
 
 # ---------- 0. Ping ----------
@@ -196,3 +199,13 @@ async def rename_shortcut(data: dict = Body(...)):
         return {"detail": "Shortcut renamed"}
     else:
         raise HTTPException(status_code=500, detail=result["error"])
+
+# ---------- 11. Send email ----------    
+@app.post("/contact")
+async def contact(data: ContactRequest):
+    try:
+        email_service.send_contact_email(data.email, data.text)
+        return {"success": True}
+    except Exception as e:
+        print("Error al enviar email:", e)
+        raise HTTPException(status_code=500, detail="Error al enviar el correo")

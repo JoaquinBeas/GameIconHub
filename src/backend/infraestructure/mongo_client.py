@@ -5,7 +5,7 @@ from pymongo import ASCENDING
 class MongoGameIconsClient:
     def __init__(self):
         # Connection URI to MongoDB Atlas with read/write credentials
-        uri = "mongodb+srv://read_write_account:HMZY9tsVGjXMWaKo@iconhubcluster.p2akhue.mongodb.net/?retryWrites=true&w=majority&appName=IconHubCluster"
+        uri = "mongodb+srv://read_write_account:HMZY9tsVGjXMWaKo@iconhubcluster.p2akhue.mongodb.net/?retryWrites=true&w=majority&appName=IconHubCluster" #TODO: ESCONDER ESTO
 
         # Create MongoDB client with stable API version
         self.client = MongoClient(uri, server_api=ServerApi('1'))

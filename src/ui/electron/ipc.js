@@ -4,7 +4,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 // 🔐 Encryption key derived from a static secret string
-const ENCRYPTION_KEY = crypto.createHash('sha256').update('ZKGuwSSMwcgB4NrkmnEhcmFcjlnHxhOK').digest();
+const ENCRYPTION_KEY = crypto.createHash('sha256').update('ZKGuwSSMwcgB4NrkmnEhcmFcjlnHxhOK').digest(); //TODO: ESCONDER ESTO
 const IV_LENGTH = 16;
 
 let guid = null;
