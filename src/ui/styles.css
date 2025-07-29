@@ -1896,3 +1896,94 @@ body {
 .form textarea:focus {
   outline: 2px solid var(--clr);
 }
+/* Contribute Modal Overlay */
+#contributeModal.contribute-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  background: rgba(30, 30, 30, 0.6);
+  width: 100vw;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+}
+
+.contribute-content {
+  background: #1c1c1c;
+  border-radius: 1rem;
+  padding: 2rem;
+}
+
+.form_contribute {
+  --bg-light: #efefef;
+  --bg-dark: #707070;
+  --clr: #c364cf;
+  --clr-alpha: #9c9c9c60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 305px;
+}
+
+.form_contribute .input-span {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form_contribute input[type="email"],
+.form_contribute input[type="url"],
+.form_contribute input[type="text"],
+.form_contribute textarea {
+  color: white;
+  border-radius: 0.5rem;
+  padding: 1rem 0.75rem;
+  width: 100%;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--clr-alpha);
+  outline: 2px solid var(--bg-dark);
+}
+
+.form_contribute textarea {
+  height: 100px;
+  resize: vertical;
+}
+
+.form_contribute input:focus,
+.form_contribute textarea:focus {
+  outline: 2px solid var(--clr);
+}
+
+.form_contribute .submit {
+  padding: 1rem 0.75rem;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 3rem;
+  background-color: var(--bg-dark);
+  color: var(--bg-light);
+  border: none;
+  cursor: pointer;
+  transition: all 300ms;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.form_contribute .submit:hover {
+  background-color: var(--clr);
+  color: var(--bg-dark);
+}
+
+.contribute-description {
+  color: var(--clr);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-align: center;
+}

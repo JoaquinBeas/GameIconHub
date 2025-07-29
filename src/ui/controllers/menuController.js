@@ -67,16 +67,67 @@ export function setupMenu() {
     });
 
     // Handle "Contribute" menu item click (placeholder)
-    document.querySelector('.menu-item[onclick="showContribute()"]')?.addEventListener('click', () => {
-        alert('Contribute section - This would open a contribution page or modal');
+    document.getElementById('contributeButton')?.addEventListener('click', () => {
+        const modal = document.getElementById('contributeModal');
+        modal.style.display = 'flex';
         menuDropdown.classList.remove('show');
         menuSection.classList.remove('dropdown-active');
     });
 
+
+    // Cerrar modal al hacer clic fuera del contenido
+    document.getElementById('contributeModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'contributeModal') {
+            e.target.style.display = 'none';
+        }
+    });
+
+    // Envío del formulario de contribución
+    document.getElementById('contributeForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById('contribEmail').value.trim();
+        const game = document.getElementById('gameName').value.trim();
+        const iconUrl = document.getElementById('iconUrl').value.trim();
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            alert("Por favor introduce un email válido.");
+            return;
+        }
+
+        if (!iconUrl.endsWith('.ico')) {
+            alert("La URL debe terminar en .ico");
+            return;
+        }
+
+        try {
+            loadingOverlay.style.display = 'flex';
+            const backendUrl = await getBackendUrl();
+            const response = await fetch(`${backendUrl}/contribute`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, game, iconUrl })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                document.getElementById('contributeModal').style.display = 'none';
+                e.target.reset();
+            } else {
+                console.log("Error al enviar la contribución.");
+            }
+        } catch (err) {
+            console.error("Error en la contribución:", err);
+        } finally {
+            loadingOverlay.style.display = 'none';
+        }
+    });
+
     // Handle "Contact" menu item click → Show form modal
-    document.querySelector('.menu-item[onclick="showContact()"]')?.addEventListener('click', () => {
+    document.getElementById('contactButton')?.addEventListener('click', () => {
         const modal = document.getElementById('contactModal');
-        modal.style.display = 'flex';  // Show modal
+        modal.style.display = 'flex';
         menuDropdown.classList.remove('show');
         menuSection.classList.remove('dropdown-active');
     });

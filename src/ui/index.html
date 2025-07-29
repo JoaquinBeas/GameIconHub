@@ -75,10 +75,8 @@
                     </div>
 
                     <div class="menu-dropdown" id="menuDropdown">
-                        <div class="menu-item"
-                            onclick="showContribute()">Contribuir</div>
-                        <div class="menu-item"
-                            onclick="showContact()">Contacto</div>
+                        <div class="menu-item" id="contributeButton">Contribuir</div>
+                        <div class="menu-item" id="contactButton">Contacto</div>
                     </div>
                 </div>
             </div>
@@ -126,6 +124,34 @@
                     <textarea name="text" id="text" rows="5" required></textarea>
                 </span>
                 <input class="submit" type="submit" value="Send mail" />
+                </form>
+            </div>
+        </div>
+       <!-- Contribute Form Modal -->
+        <div id="contributeModal" class="modal-overlay contribute-overlay" style="display: none;">
+            <div class="modal-content contribute-content">
+                <form class="form_contribute" id="contributeForm">
+                <p class="contribute-description">
+                    ¿No encuentras tu juego favorito? <br />
+                    ¡Compártenos la información para que todo el mundo pueda añadir el icono! 🎮✨
+                </p>
+
+                <span class="input-span">
+                    <label for="contribEmail" class="label">Email</label>
+                    <input type="email" name="email" id="contribEmail" required />
+                </span>
+
+                <span class="input-span">
+                    <label for="gameName" class="label">Nombre del juego</label>
+                    <input type="text" name="game" id="gameName" required/>
+                </span>
+
+                <span class="input-span">
+                    <label for="iconUrl" class="label">URL del icono (.ico, 256x256)</label>
+                    <input type="url" name="url" id="iconUrl" required />
+                </span>
+
+                <input class="submit" type="submit" value="Enviar contribución" />
                 </form>
             </div>
         </div>

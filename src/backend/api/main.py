@@ -10,6 +10,7 @@ from fastapi.responses import StreamingResponse
 from backend.core.image_helper import ImageHelper
 from backend.core.response_cleaner import ResponseCleaner
 from backend.models.dto.contact_request import ContactRequest
+from backend.models.dto.contribute_request import ContributeRequest
 from backend.models.dto.shortcut_request import ShortcutRequest
 from backend.services.email_service import EmailService
 from backend.services.shortcut_service import ShortcutService
@@ -209,3 +210,17 @@ async def contact(data: ContactRequest):
     except Exception as e:
         print("Error al enviar email:", e)
         raise HTTPException(status_code=500, detail="Error al enviar el correo")
+    
+@app.post("/contribute")
+async def contribute(data: ContributeRequest):
+    try:
+        message = f"""Contribución recibida:
+                        Email: {data.email}
+                        Juego: {data.game}
+                        URL del icono: {data.iconUrl}
+                    """
+        email_service.send_contact_email(data.email, message)
+        return {"success": True}
+    except Exception as e:
+        print("Error al enviar contribución:", e)
+        raise HTTPException(status_code=500, detail="Error al enviar contribución")
