@@ -286,3 +286,25 @@ class SteamService():
             "closest_match": best_match.name if best_match else None,
             "distance": lowest_distance
         }
+
+    def rename_shortcut(self, old_name: str, new_name: str) -> dict:
+        desktop_path = self.get_desktop_path()
+
+        def sanitize(name):
+            invalid_chars = r'<>:"/\\|?*'
+            for ch in invalid_chars:
+                name = name.replace(ch, '')
+            return name.strip()
+
+        old_file = desktop_path / f"{sanitize(old_name)}.lnk"
+        new_file = desktop_path / f"{sanitize(new_name)}.lnk"
+
+        if not old_file.exists():
+            return {"success": False, "error": f"Shortcut '{old_file}' not found"}
+
+        try:
+            old_file.rename(new_file)
+            self.refresh_desktop()
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}

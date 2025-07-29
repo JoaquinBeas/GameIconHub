@@ -1598,3 +1598,66 @@ body {
   align-items: center;
   z-index: 9999;
 }
+
+.rename-form-floating {
+	background-color: #2a2a2a;
+	border: 1px solid #555;
+	padding: 12px;
+	border-radius: 8px;
+	z-index: 10000;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+	min-width: 220px;
+}
+
+.rename-form-floating .rename-input {
+	width: 100%;
+	padding: 8px 12px;
+	font-size: 14px;
+	border-radius: 6px;
+	border: 1px solid #777;
+	background-color: #1e1e1e;
+	color: #fff;
+	outline: none;
+	transition: border-color 0.2s;
+}
+
+.rename-form-floating .rename-input:focus {
+	border-color: #9c6bff;
+}
+
+.rename-buttons {
+	display: flex;
+	justify-content: center;
+	gap: 10px;
+	margin-top: 10px;
+}
+
+.rename-buttons button {
+	padding: 6px 14px;
+	font-size: 14px;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	transition: background-color 0.2s;
+}
+
+.rename-save-btn {
+	background-color: #9c6bff;
+	color: #fff;
+}
+
+.rename-save-btn:hover {
+	background-color: #b985ff;
+}
+
+.rename-cancel-btn {
+	background-color: #333;
+	color: #ccc;
+}
+
+.rename-cancel-btn:hover {
+	background-color: #444;
+}

@@ -1,8 +1,13 @@
 # main.py
 
+import ctypes.wintypes
 from io import BytesIO
+import os
+import pathlib
+import subprocess
+import tempfile
 from PIL import Image
-from fastapi import FastAPI, Query, Path, HTTPException, Body
+from fastapi import FastAPI, Request, Query, Path, HTTPException, Body
 from fastapi.responses import StreamingResponse
 from backend.core.response_cleaner import ResponseCleaner
 from backend.models.dto.shortcut_request import ShortcutRequest
@@ -142,7 +147,8 @@ async def generate_shortcut(
         return {"detail": "Shortcut created"}
     else:
         raise HTTPException(status_code=500, detail=result["error"])
-    
+ 
+# ---------- 9. Delete desktop shortcut ----------   
 @app.delete("/app/delete_shortcut")
 async def delete_shortcut(data: ShortcutRequest = Body(...)):
     result = steam_client.delete_shortcut(data.app_name)
@@ -150,3 +156,21 @@ async def delete_shortcut(data: ShortcutRequest = Body(...)):
         return {"detail": "Shortcut eliminado"}
     else:
         raise HTTPException(status_code=404, detail=result["error"])
+
+# ---------- 10. Rename desktop shortcut ----------    
+@app.post("/app/rename_shortcut")
+async def rename_shortcut(data: dict = Body(...)):
+    # Extract old and new names from raw body
+    old_name = data.get("old_name")
+    new_name = data.get("new_name")
+
+    if not old_name or not new_name:
+        raise HTTPException(status_code=400, detail="Both 'old_name' and 'new_name' are required")
+
+    # Call service to rename the actual shortcut
+    result = steam_client.rename_shortcut(old_name, new_name)
+
+    if result["success"]:
+        return {"detail": "Shortcut renamed"}
+    else:
+        raise HTTPException(status_code=500, detail=result["error"])

@@ -72,6 +72,9 @@ function setupIPC() {
         }
     });
 }
+function sanitizeFileName(name) {
+    return name.replace(/[<>:"/\\|?*]/g, '');
+}
 function getEncryptedGUID() {
     if (guid) return guid;
 

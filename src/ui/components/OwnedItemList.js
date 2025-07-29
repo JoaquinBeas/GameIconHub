@@ -260,8 +260,8 @@ async function saveOwnedItemsToPersistence() {
   try {
     const currentData = await window.api.loadData();
     await window.api.saveData({
-        encryptedGuid: currentData.encryptedGuid || '', // conservar
-        ownedItems: persistentOwnedItems
+      encryptedGuid: currentData.encryptedGuid || '', // conservar
+      ownedItems: persistentOwnedItems
     });
 
     // Invalida el cache para forzar recarga en la próxima lectura
@@ -355,27 +355,6 @@ function openItemCard(item, x, y) {
             </svg> Rename
           </label>
         </li>
-        <li class="element">
-          <label for="share">
-            <input type="radio" id="share" name="filed" />
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7e8590" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-round-plus">
-              <path d="M2 21a8 8 0 0 1 13.292-6"></path>
-              <circle cx="10" cy="8" r="5"></circle>
-              <path d="M19 16v6"></path>
-              <path d="M22 19h-6"></path>
-            </svg> Share
-          </label>
-        </li>
-        <div class="separator"></div>
-        <li class="element">
-          <label for="go to properties">
-            <input type="radio" id="Properties" name="filed" />
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7e8590" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings">
-              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
-              <circle cx="12" cy="12" r="3"></circle>
-            </svg> Properties
-          </label>
-        </li>
         <li class="element delete">
           <label for="delete">
             <input type="radio" id="delete" name="filed" />
@@ -395,6 +374,96 @@ function openItemCard(item, x, y) {
   card.style.top = `${y}px`;
   card.style.left = `${x}px`;
   card.style.zIndex = '99999';
+
+  const deleteRadio = card.querySelector('#delete');
+  deleteRadio?.addEventListener('change', async () => {
+    await deleteDesktopShortcut(item.name); // <- Asumiendo que `item.name` es `app_name`
+    persistentOwnedItems = persistentOwnedItems.filter(i => i.id !== item.id);
+
+    // 💾 Guarda los cambios
+    await saveOwnedItemsToPersistence();
+
+    // 🔄 Re-renderiza de forma suaveremoveItemFromOwnedList
+    renderOwnedItems();
+    import('../controllers/itemController.js').then(module => {
+      module.renderItems(); // fuerza re-render de los ItemCards
+    });
+    card.remove(); // Cierra el menú
+
+  });
+
+  const renameRadio = card.querySelector('#rename');
+  renameRadio?.addEventListener('click', () => {
+    // Remove existing rename form if present
+    document.querySelector('.rename-form-floating')?.remove();
+
+    // Get card position
+    const cardRect = card.getBoundingClientRect();
+
+    // Create floating form
+    const form = document.createElement('div');
+    form.classList.add('rename-form-floating');
+    form.style.position = 'fixed';
+    form.style.top = `${cardRect.bottom + 8}px`;
+    form.style.left = `${cardRect.left}px`;
+    form.innerHTML = `
+      <input type="text" value="${item.name}" class="rename-input" />
+      <div class="rename-buttons">
+        <button class="rename-save-btn">Save</button>
+        <button class="rename-cancel-btn">Cancel</button>
+      </div>
+    `;
+
+
+    document.body.appendChild(form);
+
+    const input = form.querySelector('.rename-input');
+    const saveBtn = form.querySelector('.rename-save-btn');
+    const cancelBtn = form.querySelector('.rename-cancel-btn');
+
+    cancelBtn.addEventListener('click', () => {
+      form.remove();
+      card.remove();
+    });
+
+    saveBtn.addEventListener('click', async () => {
+      const newName = input.value.trim();
+      if (!newName || newName === item.name) {
+        form.remove();
+        card.remove();
+        return;
+      }
+
+      const oldName = item.name;
+
+      const index = persistentOwnedItems.findIndex(i => i.id === item.id);
+      if (index !== -1) {
+        persistentOwnedItems[index].name = newName;
+      }
+
+      await saveOwnedItemsToPersistence();
+      await renderOwnedItems(true);
+
+      try {
+        await fetch("http://localhost:8000/app/rename_shortcut", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            old_name: oldName,
+            new_name: newName
+          })
+        });
+      } catch (err) {
+        console.error("❌ Error renaming shortcut on backend:", err);
+      }
+
+      form.remove();
+      card.remove();
+    });
+
+    input.focus();
+    input.select();
+  });
 
   setTimeout(() => {
     document.addEventListener('click', (e) => {
