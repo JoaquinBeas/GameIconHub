@@ -47,7 +47,7 @@ export async function loadInitialItems() {
         filteredItems = [...items];
     } catch (err) {
         console.error('Error loading initial items:', err);
-        alert("Could not connect to the backend. Make sure it is running.");
+        alert("Could not connect to the backend.");
     }
 }
 

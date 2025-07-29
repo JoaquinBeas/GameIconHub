@@ -115,10 +115,10 @@ export function setupMenu() {
                 document.getElementById('contributeModal').style.display = 'none';
                 e.target.reset();
             } else {
-                console.error("Error al enviar la contribución.");
+                console.error("Error sending contribution.");
             }
         } catch (err) {
-            console.error("Error en la contribución:", err);
+            console.error("Error inside the contribution:", err);
         } finally {
             loadingOverlay.style.display = 'none';
         }
@@ -165,10 +165,10 @@ export function setupMenu() {
                 document.getElementById('contactModal').style.display = 'none';
                 e.target.reset();
             } else {
-                console.error("Error al enviar el email.");
+                console.error("Error sending ticket.");
             }
         } catch (err) {
-            console.error("Error al conectar con el backend:", err);
+            console.error("Error connecting to backend:", err);
         } finally {
             loadingOverlay.style.display = 'none';  // Ocultar spinner
         }

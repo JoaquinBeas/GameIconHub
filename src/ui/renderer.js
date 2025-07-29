@@ -48,7 +48,7 @@ async function waitForBackend(retries = 20, delay = 500) {
                 return true;
             }
         } catch (e) {
-            console.error(`Esperando backend (${i + 1}/${retries})...`);
+            console.error(`Waiting backend (${i + 1}/${retries})...`);
         }
         await new Promise(r => setTimeout(r, delay));
     }
