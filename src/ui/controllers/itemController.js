@@ -3,6 +3,7 @@ import { createItemCard } from '../components/ItemCard.js';
 import { renderOwnedItems } from '../components/OwnedItemList.js';
 import { addItemToOwnedList, updateOwnedItem } from '../components/OwnedItemList.js'; // Import
 import { getBackendUrl } from '../utils/backendConfig.js';
+import { t } from '../utils/lang.js';
 
 export let items = [];
 export let filteredItems = [];
@@ -47,7 +48,7 @@ export async function loadInitialItems() {
         filteredItems = [...items];
     } catch (err) {
         console.error('Error loading initial items:', err);
-        alert("Could not connect to the backend.");
+        alert(t('alerts.CantConnectToBackend'));
     }
 }
 

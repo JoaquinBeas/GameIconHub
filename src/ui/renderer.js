@@ -5,6 +5,8 @@ import { setupMenu } from './controllers/menuController.js';
 import { setupModalImageClick } from './components/Modal.js';
 import { renderOwnedItems, loadOwnedItemsFromPersistence } from './components/OwnedItemList.js';
 import { getBackendUrl } from './utils/backendConfig.js';
+import { loadLanguage } from './utils/lang.js';
+import { t } from './utils/lang.js';
 
 function wireWindowButtons() {
     const actions = [
@@ -48,7 +50,7 @@ async function waitForBackend(retries = 20, delay = 500) {
                 return true;
             }
         } catch (e) {
-            console.error(`Waiting backend (${i + 1}/${retries})...`);
+            console.warn(`Waiting backend (${i + 1}/${retries})...`);
         }
         await new Promise(r => setTimeout(r, delay));
     }
@@ -56,6 +58,7 @@ async function waitForBackend(retries = 20, delay = 500) {
 }
 
 async function init() {
+    await loadLanguage('en_EN');
     wireWindowButtons();
     setupMenu();
     setupModalImageClick();
@@ -64,7 +67,7 @@ async function init() {
     try {
         await waitForBackend();
     } catch (e) {
-        alert('No se pudo conectar con el backend.');
+        alert(t('alerts.CantConnectToBackend'));
         return;
     }
 

@@ -1,7 +1,9 @@
 // controllers/menuController.js
 
 import { getBackendUrl } from '../utils/backendConfig.js';
+import { t } from '../utils/lang.js';
 
+// Ejemplo en validación de email
 export function setupMenu() {
     const menuButton = document.getElementById('menuButton');
     const menuDropdown = document.getElementById('menuDropdown');
@@ -92,12 +94,12 @@ export function setupMenu() {
         const loadingOverlay = document.getElementById('loadingOverlay');
 
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            alert("Por favor introduce un email válido.");
+            alert(t('alerts.EmailError'));
             return;
         }
 
         if (!iconUrl.endsWith('.ico')) {
-            alert("La URL debe terminar en .ico");
+            alert(t('alerts.IcoUrlError'));
             return;
         }
 
@@ -146,7 +148,7 @@ export function setupMenu() {
 
         // Validar email simple (ver más abajo para mejora)
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            alert("Por favor introduce un email válido.");
+            alert(t('alerts.EmailError'));
             return;
         }
 
