@@ -4,6 +4,7 @@ import { renderItems, handleSearch, loadInitialItems } from './controllers/itemC
 import { setupMenu } from './controllers/menuController.js';
 import { setupModalImageClick } from './components/Modal.js';
 import { renderOwnedItems, loadOwnedItemsFromPersistence } from './components/OwnedItemList.js';
+import { getBackendUrl } from './utils/backendConfig.js';
 
 async function init() {
     wireWindowButtons();
@@ -25,13 +26,16 @@ async function init() {
     await renderOwnedItems(true);
 }
 
-
 async function waitForBackend(retries = 20, delay = 500) {
     for (let i = 0; i < retries; i++) {
         try {
-            const res = await fetch('http://localhost:8000/ping');
+            const baseUrl = await getBackendUrl();
+            const res = await fetch(`${baseUrl}/ping`);
             const data = await res.json();
-            if (data.status === 'ok') return true;
+            if (data.status === 'ok') {
+                console.log(`✅ Backend conectado en: ${baseUrl}`);
+                return true;
+            }
         } catch (e) {
             console.log(`⏳ Esperando backend (${i + 1}/${retries})...`);
         }

@@ -10,3 +10,7 @@ contextBridge.exposeInMainWorld('api', {
     loadData: () => ipcRenderer.invoke('load-data'),
     deleteShortcut: (appName) => ipcRenderer.invoke('delete-shortcut', appName),
 });
+
+contextBridge.exposeInMainWorld('fs', {
+    readFile: (filePath, options) => ipcRenderer.invoke('read-file', filePath, options)
+});

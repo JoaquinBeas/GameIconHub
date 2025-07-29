@@ -2,6 +2,7 @@
 import { createItemCard } from '../components/ItemCard.js';
 import { renderOwnedItems } from '../components/OwnedItemList.js';
 import { addItemToOwnedList, updateOwnedItem } from '../components/OwnedItemList.js'; // 🆕 Importar
+import { getBackendUrl } from '../utils/backendConfig.js';
 
 export let items = [];
 export let filteredItems = [];
@@ -17,14 +18,16 @@ export function renderItems() {
 
 export async function loadInitialItems() {
     try {
+        const baseUrl = await getBackendUrl();
+
         // Intenta con retry inteligente
-        let res = await fetchWithRetry('http://localhost:8000/search/paginated?term=&start=0&count=20');
+        let res = await fetchWithRetry(`${baseUrl}/search/paginated?term=&start=0&count=20`);
         let data = await res.json();
 
         // Fallback a /suggest si está vacío
         if (!Array.isArray(data) || data.length < 3) {
             console.warn('Paginated search is empty, usando sugerencias...');
-            const suggestRes = await fetchWithRetry('http://localhost:8000/suggest?term=');
+            const suggestRes = await fetchWithRetry(`${baseUrl}/suggest?term=`);
             data = await suggestRes.json();
         }
 
@@ -42,7 +45,7 @@ export async function loadInitialItems() {
         filteredItems = [...items];
     } catch (err) {
         console.error('❌ Error al cargar items iniciales:', err);
-        alert("No se pudo conectar con el backend. Asegúrate de que esté iniciado en http://localhost:8000");
+        alert("No se pudo conectar con el backend. Asegúrate de que esté iniciado.");
     }
 }
 
@@ -63,19 +66,21 @@ export async function handleSearch() {
     const searchInput = document.getElementById('searchInput');
     const searchTerm = searchInput.value.trim();
     const query = encodeURIComponent(searchTerm);
-    let url = `http://localhost:8000/search/paginated?term=${query}&start=0&count=20`;
-    
+
     try {
+        const baseUrl = await getBackendUrl();
+        let url = `${baseUrl}/search/paginated?term=${query}&start=0&count=20`;
+
         let res = await fetch(url);
         let data = await res.json();
-        
+
         // Fallback a /suggest si vacío
         if (!Array.isArray(data) || data.length < 3) {
             console.warn('Search returned empty. Trying /suggest...');
-            const fallbackRes = await fetch(`http://localhost:8000/suggest?term=${query}`);
+            const fallbackRes = await fetch(`${baseUrl}/suggest?term=${query}`);
             data = await fallbackRes.json();
         }
-        
+
         items = data
             .filter(item => item.type === "app")
             .map(item => ({
@@ -86,7 +91,7 @@ export async function handleSearch() {
                 owned: false,
                 sent: false
             }));
-        
+
         filteredItems = [...items];
         renderItems();
         renderOwnedItems(items, filteredItems, renderItems);
@@ -103,6 +108,8 @@ export async function sendToDesktop(button, itemId) {
     const text = button.querySelector('.text');
     if (text) text.innerHTML = 'Sent ✔️';
 
+    const baseUrl = await getBackendUrl();
+
     // 🆕 Agrega a la sidebar independiente
     const itemForSidebar = {
         id: item.id,
@@ -112,7 +119,7 @@ export async function sendToDesktop(button, itemId) {
 
     // 👇 Obtén el smallIcon del backend
     try {
-        const res = await fetch(`http://localhost:8000/app/${itemId}/small_icon_url`);
+        const res = await fetch(`${baseUrl}/app/${itemId}/small_icon_url`);
         const data = await res.json();
         if (data.icon_url) {
             itemForSidebar.smallIcon = data.icon_url;
@@ -124,7 +131,7 @@ export async function sendToDesktop(button, itemId) {
     // 🏷️ Agrega a la sidebar (independiente)
     await addItemToOwnedList(itemForSidebar);
     try {
-        await fetch(`http://localhost:8000/app/${item.id}/generate_shortcut`, {
+        await fetch(`${baseUrl}/app/${item.id}/generate_shortcut`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -140,26 +147,26 @@ export async function sendToDesktop(button, itemId) {
 export async function downloadItem(itemId) {
     const item = items.find(i => i.id === itemId);
     if (!item) return;
-    
+
     const card = document.querySelector(`.Btn[data-id="${itemId}"]`);
     if (!card || card.classList.contains('completed') || card.classList.contains('downloading')) return;
-    
+
     // Show loading state
     showLoadingState(card);
-    
+
     try {
         await downloadImage(itemId);
-        
+
         // Hide loading and show completed state
         hideLoadingState(card);
         showCompletedState(card);
-        
+
         console.log(`Image for ${item.name} downloaded successfully`);
     } catch (error) {
         // Hide loading state on error
         hideLoadingState(card);
         console.error(`Error downloading image for ${item.name}:`, error);
-        
+
         // Optionally show error state
         showErrorState(card);
     }
@@ -181,7 +188,8 @@ export async function deleteDesktopShortcut(appName) {
 // Browser-compatible image download function
 async function downloadImage(itemId) {
     try {
-        const url = `http://localhost:8000/app/${itemId}/icon`;
+        const baseUrl = await getBackendUrl();
+        const url = `${baseUrl}/app/${itemId}/icon`;
         const response = await fetch(url);
 
         if (!response.ok) {
@@ -209,14 +217,11 @@ async function downloadImage(itemId) {
     }
 }
 
-
-
-
 // Loading state management functions
 function showLoadingState(card) {
     // Add downloading class to prevent multiple clicks
     card.classList.add('downloading');
-    
+
     // Create and show the full-screen loader
     const loader = document.createElement('div');
     loader.className = 'loader';
@@ -224,10 +229,10 @@ function showLoadingState(card) {
     loader.innerHTML = `
         <div class="justify-content-center jimu-primary-loading"></div>
     `;
-    
+
     // Add loader to body for full-screen coverage
     document.body.appendChild(loader);
-    
+
     // Disable scrolling
     document.body.style.overflow = 'hidden';
 }
@@ -235,20 +240,20 @@ function showLoadingState(card) {
 function hideLoadingState(card) {
     // Remove downloading class
     card.classList.remove('downloading');
-    
+
     // Remove the full-screen loader
     const loader = document.getElementById('downloadLoader');
     if (loader) {
         loader.remove();
     }
-    
+
     // Re-enable scrolling
     document.body.style.overflow = '';
 }
 
 function showCompletedState(card) {
     card.classList.add('completed');
-    
+
     const CHECK_SVG = `<svg class="svgIcon" viewBox="0 0 512 512" height="1em" xmlns="http://www.w3.org/2000/svg">
         <path d="M173.9 439.4L7 272c-9.4-9.4-9.4-24.6
         0-33.9l22.6-22.6c9.4-9.4 24.6-9.4
@@ -257,10 +262,10 @@ function showCompletedState(card) {
         9.4 24.6 0 33.9L226.6 439.4c-9.4
         9.4-24.6 9.4-34 .0z"/>
     </svg>`;
-    
+
     const svgIcon = card.querySelector('.svgIcon');
     const icon2 = card.querySelector('.icon2');
-    
+
     if (svgIcon) svgIcon.outerHTML = CHECK_SVG;
     if (icon2) icon2.style.display = 'none';
 }
@@ -268,7 +273,7 @@ function showCompletedState(card) {
 function showErrorState(card) {
     // Optionally add error styling or show error message
     card.style.borderColor = '#ff4444';
-    
+
     // Reset after 3 seconds
     setTimeout(() => {
         card.style.borderColor = '';

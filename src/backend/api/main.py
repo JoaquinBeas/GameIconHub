@@ -1,13 +1,11 @@
 # main.py
 
-import ctypes.wintypes
-from io import BytesIO
+import socket
+import json
 import os
-import pathlib
-import subprocess
-import tempfile
+from io import BytesIO
 from PIL import Image
-from fastapi import FastAPI, Request, Query, Path, HTTPException, Body
+from fastapi import FastAPI, Query, Path, HTTPException, Body
 from fastapi.responses import StreamingResponse
 from backend.core.response_cleaner import ResponseCleaner
 from backend.models.dto.shortcut_request import ShortcutRequest
@@ -28,6 +26,27 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def find_free_port():
+    with socket.socket() as s:
+        s.bind(('', 0))  # sistema asigna puerto disponible
+        return s.getsockname()[1]
+
+def write_port_config(port):
+    """Escribe el puerto a un archivo JSON que el frontend puede leer"""
+    config_path = os.path.join(os.path.dirname(__file__), '..', 'backend-config.json')
+    config = {
+        "backend_port": port,
+        "backend_url": f"http://127.0.0.1:{port}"
+    }
+    
+    try:
+        with open(config_path, 'w') as f:
+            json.dump(config, f, indent=2)
+        print(f"✅ Configuración guardada en: {config_path}")
+    except Exception as e:
+        print(f"⚠️ Error guardando configuración: {e}")
 
 steam_client = SteamService()
 response_cleaner = ResponseCleaner()

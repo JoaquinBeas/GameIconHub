@@ -71,6 +71,11 @@ function setupIPC() {
             return { success: false, message: err.message };
         }
     });
+
+    ipcMain.handle('read-file', async (event, filePath, options) => {
+        const absolutePath = path.join(__dirname, '..', '..','..', filePath); // Ajusta si lo guardas en otra ruta
+        return fs.promises.readFile(absolutePath, options || 'utf8');
+    });
 }
 function sanitizeFileName(name) {
     return name.replace(/[<>:"/\\|?*]/g, '');

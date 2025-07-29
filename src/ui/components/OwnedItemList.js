@@ -1,5 +1,6 @@
 // components/OwnedItemList.js
 import { deleteDesktopShortcut } from "../controllers/itemController.js";
+import { getBackendUrl } from "../utils/backendConfig.js";
 // 🔥 VERSIÓN OPTIMIZADA: Sin flickering, solo actualiza cuando hay cambios reales
 let persistentOwnedItems = [];
 let lastRenderedHash = ''; // Hash para detectar cambios reales
@@ -445,7 +446,8 @@ function openItemCard(item, x, y) {
       await renderOwnedItems(true);
 
       try {
-        await fetch("http://localhost:8000/app/rename_shortcut", {
+        const baseUrl = await getBackendUrl();
+        await fetch(`${baseUrl}/app/rename_shortcut`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

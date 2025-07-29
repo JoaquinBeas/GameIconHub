@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 import time
 import requests
+from datetime import datetime
 from PIL import Image
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -241,51 +242,47 @@ class SteamService():
         ctypes.windll.shell32.SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, None, None)
 
     def delete_shortcut(self, app_name: str) -> dict:
-        # Deletes a shortcut by exact match or fuzzy name match using Levenshtein distance
         desktop_path = self.get_desktop_path()
+
+        # Clean app name
         app_name = app_name.replace('_', ' ')
         invalid_chars = r'<>:"/\|?*'
         for ch in invalid_chars:
             app_name = app_name.replace(ch, '')
-        possible_names = [f"{app_name}.lnk"]
+        target_name = app_name.lower()
 
-        for name in possible_names:
-            shortcut_path = desktop_path / name
-            if shortcut_path.exists():
-                try:
-                    shortcut_path.unlink()
-                    return {"success": True, "method": "exact", "match": name}
-                except Exception as e:
-                    return {"success": False, "error": f"Error deleting shortcut: {e}"}
-
-        # If no exact match, try Levenshtein match
-        best_match = None
+        best_matches = []
         lowest_distance = float('inf')
+
         for file in desktop_path.glob("*.lnk"):
-            dist = Levenshtein.distance(file.stem.lower(), app_name.lower())
+            dist = Levenshtein.distance(file.stem.lower(), target_name)
             if dist < lowest_distance:
-                best_match = file
+                best_matches = [file]
                 lowest_distance = dist
+            elif dist == lowest_distance:
+                best_matches.append(file)
 
-        MAX_DISTANCE = 5
-        if best_match and lowest_distance <= MAX_DISTANCE:
-            try:
-                best_match.unlink()
-                return {
-                    "success": True,
-                    "method": "levenshtein",
-                    "match": best_match.name,
-                    "distance": lowest_distance
-                }
-            except Exception as e:
-                return {"success": False, "error": f"Error deleting similar shortcut: {e}"}
+        if not best_matches or lowest_distance > 15:  # adjustable threshold
+            return {
+                "success": False,
+                "error": "No matching shortcut found",
+                "distance": lowest_distance if best_matches else None
+            }
 
-        return {
-            "success": False,
-            "error": "No matching shortcut found",
-            "closest_match": best_match.name if best_match else None,
-            "distance": lowest_distance
-        }
+        # Choose most recent among the best matches
+        most_recent = max(best_matches, key=lambda f: f.stat().st_ctime)
+
+        try:
+            most_recent.unlink()
+            return {
+                "success": True,
+                "match": most_recent.name,
+                "distance": lowest_distance,
+                "deleted_time": datetime.fromtimestamp(most_recent.stat().st_ctime).isoformat()
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
 
     def rename_shortcut(self, old_name: str, new_name: str) -> dict:
         desktop_path = self.get_desktop_path()
