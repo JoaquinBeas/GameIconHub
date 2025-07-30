@@ -10,7 +10,7 @@
 
     <body>
         <div class="title-bar" id="titleBar">
-            <div class="title-text">GAME ICON HUB</div>
+            <div class="title-text" data-i18n="translations.Title">GAME ICON HUB</div>
 
             <div class="window-controls">
                 <button class="win-btn" id="minBtn" title="Minimize">
@@ -50,7 +50,7 @@
                 <div class="divider"></div>
 
                 <div class="owned-items-section">
-                    <h3>Desktop Icons</h3>
+                    <h3 data-i18n="translations.DesktopIcons">Desktop icons</h3>
                     <div class="owned-items-list" id="ownedItemsList">
                     </div>
                 </div>
@@ -75,8 +75,8 @@
                     </div>
 
                     <div class="menu-dropdown" id="menuDropdown">
-                        <div class="menu-item" id="contributeButton">Contribuir</div>
-                        <div class="menu-item" id="contactButton">Contacto</div>
+                        <div class="menu-item" id="contributeButton" data-i18n="translations.Contribute">Contribute</div>
+                        <div class="menu-item" id="contactButton" data-i18n="translations.Contact">Contact</div>
                     </div>
                 </div>
             </div>
@@ -85,8 +85,7 @@
             <div class="main-content">
                 <div class="header">
                     <div class="searchBox">
-                        <input class="searchInput" type="text" id="searchInput"
-                            placeholder="Search a game" />
+                        <input class="searchInput" type="text" id="searchInput" data-i18n-placeholder="translations.Placeholder" placeholder="Search a game" />
                         <button class="searchButton" id="searchButton"
                             title="Search">
                             <svg xmlns="http://www.w3.org/2000/svg" width="30"
@@ -116,14 +115,14 @@
             <div class="modal-content" style="background: #1c1c1c; border-radius: 1rem; padding: 2rem;">
                 <form class="form_email" id="contactForm">
                 <span class="input-span">
-                    <label for="email" class="label">Email</label>
+                    <label for="email" class="label" data-i18n="translations.Email">Email</label>
                     <input type="email" name="email" id="email" required />
                 </span>
                 <span class="input-span">
-                    <label for="text" class="label">Body</label>
+                    <label for="text" class="label" data-i18n="translations.Body">Message</label>
                     <textarea name="text" id="text" rows="5" required></textarea>
                 </span>
-                <input class="submit" type="submit" value="Send mail" />
+                <input class="submit" type="submit" data-i18n-value="translations.SendMail" value="Send mail" />
                 </form>
             </div>
         </div>
@@ -131,27 +130,24 @@
         <div id="contributeModal" class="modal-overlay contribute-overlay" style="display: none;">
             <div class="modal-content contribute-content">
                 <form class="form_contribute" id="contributeForm">
-                <p class="contribute-description">
-                    ¿No encuentras tu juego favorito? <br />
-                    ¡Compártenos la información para que todo el mundo pueda añadir el icono! 🎮✨
-                </p>
+                <p class="contribute-description" data-i18n="translations.Description">Can't find your favorite game? Share its info with us so everyone can add its icon! 🎮✨</p>
 
                 <span class="input-span">
-                    <label for="contribEmail" class="label">Email</label>
+                    <label for="contribEmail" class="label" data-i18n="translations.Email">Email</label>
                     <input type="email" name="email" id="contribEmail" required />
                 </span>
 
                 <span class="input-span">
-                    <label for="gameName" class="label">Nombre del juego</label>
+                    <label for="gameName" class="label" data-i18n="translations.GameName">Game name</label>
                     <input type="text" name="game" id="gameName" required/>
                 </span>
 
                 <span class="input-span">
-                    <label for="iconUrl" class="label">URL del icono (.ico, 256x256)</label>
+                    <label for="iconUrl" class="label" data-i18n="translations.IconUrl">Icon URL (.ico, 256x256)</label>
                     <input type="url" name="url" id="iconUrl" required />
                 </span>
 
-                <input class="submit" type="submit" value="Enviar contribución" />
+                <input class="submit" type="submit" data-i18n-value="translations.SubmitContribute" value="Submit contribution" />
                 </form>
             </div>
         </div>

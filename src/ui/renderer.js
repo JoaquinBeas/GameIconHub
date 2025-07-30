@@ -58,7 +58,8 @@ async function waitForBackend(retries = 20, delay = 500) {
 }
 
 async function init() {
-    await loadLanguage('en_EN');
+    await loadLanguage('es_ES');
+    updateTextContent();
     wireWindowButtons();
     setupMenu();
     setupModalImageClick();
@@ -76,6 +77,22 @@ async function init() {
     await loadOwnedItemsFromPersistence();
     renderItems();
     await renderOwnedItems(true);
+}
+function updateTextContent() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        el.textContent = t(key);
+    });
+
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        el.setAttribute('placeholder', t(key));
+    });
+
+    document.querySelectorAll('[data-i18n-value]').forEach(el => {
+        const key = el.getAttribute('data-i18n-value');
+        el.setAttribute('value', t(key));
+    });
 }
 
 document.addEventListener('DOMContentLoaded', init);
