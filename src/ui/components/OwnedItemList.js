@@ -44,17 +44,20 @@ async function renderItemsSmooth(container) {
 
   // 📝 Handle empty list case
   if (persistentOwnedItems.length === 0) {
+    // ❌ Eliminar todos los mensajes vacíos anteriores (para regenerarlos traducidos)
     existingItems.forEach(el => {
-      if (!el.classList.contains('no-items-message')) slideOutAndRemove(el);
+      if (el.classList.contains('no-items-message') || !el.classList.contains('owned-item')) {
+        slideOutAndRemove(el);
+      }
     });
 
-    if (!container.querySelector('.no-items-message')) {
-      const msg = createEmptyMessage();
-      container.appendChild(msg);
-      slideIn(msg);
-    }
+    // ✅ Crear y añadir nuevo mensaje traducido
+    const msg = createEmptyMessage();
+    container.appendChild(msg);
+    slideIn(msg);
     return;
   }
+
 
   // 🗑️ Remove "empty" message if present
   const emptyMsg = container.querySelector('.no-items-message');

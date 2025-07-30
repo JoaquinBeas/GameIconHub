@@ -1987,3 +1987,57 @@ body {
   font-size: 0.95rem;
   text-align: center;
 }
+/* The switch-modern - the box around the slider-modern */
+.switch-modern {
+	font-size: 17px;
+	position: relative;
+	display: inline-block;
+	width: 55px;
+	height: 25px;
+	margin-left: 21px;
+	margin-right: 14px;
+}
+
+/* Hide default HTML checkbox */
+.switch-modern input {
+	opacity: 1;
+	width: 0;
+	height: 0;
+}
+
+/* The slider-modern */
+.slider-modern {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0px;
+	background: #302f2f;
+	transition: .4s;
+	border-radius: 30px;
+	border: 1px solid #ccc;
+}
+
+.slider-modern:before {
+	position: absolute;
+	content: "";
+	height: 1.4em;
+	width: 1.4em;
+	border-radius: 16px;
+	left: 5.2px;
+	top: 0;
+	bottom: 0;
+	background-color: white;
+	/* box-shadow: 0 2px 5px #999999; */
+	transition: .4s;
+}
+
+input:checked+.slider-modern {
+	background-color: #b985ff;
+	border: 1px solid transparent;
+}
+
+input:checked+.slider-modern:before {
+	transform: translateX(1.5em);
+}
