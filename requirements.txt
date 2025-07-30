@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+BeautifulSoup4
+undetected-chromedriver 
+selenium
+concurrently
+pyshortcuts
+pillow
+pymongo[srv]==3.12
+Levenshtein
+setuptools

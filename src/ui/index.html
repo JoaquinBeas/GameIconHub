@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Dark Item Manager</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+
+    <body>
+        <div class="title-bar" id="titleBar">
+            <div class="title-text" data-i18n="translations.Title">GAME ICON HUB</div>
+
+            <div class="window-controls">
+                <button class="win-btn" id="minBtn" title="Minimize">
+                    <svg viewBox="0 0 10 1">
+                        <rect width="10" height="1" />
+                    </svg>
+                </button>
+
+                <button class="win-btn" id="maxBtn" title="Maximize / Restore">
+                    <svg viewBox="0 0 10 10" fill="none" stroke-width="1">
+                        <rect x="0.5" y="0.5" width="9" height="9" rx="1" />
+                    </svg>
+                </button>
+
+                <button class="win-btn close" id="closeBtn" title="Close">
+                    <svg viewBox="0 0 10 10" stroke-width="1.2">
+                        <line x1="1" y1="1" x2="9" y2="9" />
+                        <line x1="9" y1="1" x2="1" y2="9" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="app-container">
+            <!-- Left Sidebar -->
+            <div class="sidebar">
+                <div class="profile-section">
+                    <!-- <div class="profile-name-wrapper">
+                    <span id="profileName" class="profile-name">User</span>
+                    <button id="editButton" class="profile-edit-btn" title="Edit name">✎</button>
+                </div> -->
+                    <div class="main-logo" style="height:80px">
+                        <img src="assets/app_icon_small.ico" alt="App Icon"
+                            class="profile-icon" />
+                    </div>
+                </div>
+                <div class="divider"></div>
+
+                <div class="owned-items-section">
+                    <h3 data-i18n="translations.DesktopIcons">Desktop icons</h3>
+                    <div class="owned-items-list" id="ownedItemsList">
+                    </div>
+                </div>
+
+                <div class="menu-section">
+                    <!-- <button class="outer-cont flex" id="aiButton"
+                        title="Ask Spacious AI">
+                        <svg viewBox="0 0 24 24" height="24" width="24"
+                            xmlns="http://www.w3.org/2000/svg">
+                        </svg>
+                        AI Assistant
+                    </button> -->
+                    <div class="menu-button" id="menuButton">
+                        <svg width="20" height="20" viewBox="0 0 24 24"
+                            fill="none">
+                            <path d="M3 12H21M3 6H21M3 18H21"
+                                stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                    <div class="menu-dropdown" id="menuDropdown">
+                        <div class="menu-item" id="contributeButton" data-i18n="translations.Contribute">Contribute</div>
+                        <div class="menu-item" id="contactButton" data-i18n="translations.Contact">Contact</div>
+                        <div class="menu-item" id="lenguageToggle">
+                            <span>Español</span>
+                            <label class="switch-modern">
+                                <input type="checkbox" id="language-toggle">
+                                <span class="slider-modern"></span>
+                            </label>
+                            <span>English</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <div class="header">
+                    <div class="searchBox">
+                        <input class="searchInput" type="text" id="searchInput" data-i18n-placeholder="translations.Placeholder" placeholder="Search a game" />
+                        <button class="searchButton" id="searchButton"
+                            title="Search">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30"
+                                height="30" viewBox="0 0 29 29" fill="none">
+                                <path
+                                    d="M23.7953 23.9182L19.0585 19.1814M19.0585 19.1814C20.7168 17.523 21.5794 15.4405 21.5794 13.269C21.5794 11.0975 20.7168 9.01499 19.1814 7.47953C17.6459 5.94407 15.5634 5.08145 13.3919 5.08145C11.2204 5.08145 9.13789 5.94407 7.60242 7.47953C6.06696 9.01499 5.20435 11.0975 5.20435 13.269C5.20435 15.4405 6.06696 17.523 7.60242 19.0585C9.13789 20.594 11.2204 21.4566 13.3919 21.4566C15.5634 21.4566 17.6459 20.594 19.1814 19.0585Z"
+                                    stroke="white" stroke-width="2.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="items-container" id="itemsContainer">
+                </div>
+            </div>
+        </div>
+
+        <div id="modalOverlay" class="modal-overlay">
+            <div class="modal-content" id="modalContent">
+                <div id="modalPicture" class="modal-picture"></div>
+            </div>
+        </div>
+        <!-- Contact Form Modal -->
+        <div id="contactModal" class="modal-overlay" style="display: none;">
+            <div class="modal-content" style="background: #1c1c1c; border-radius: 1rem; padding: 2rem;">
+                <form class="form_email" id="contactForm">
+                <span class="input-span">
+                    <label for="email" class="label" data-i18n="translations.Email">Email</label>
+                    <input type="email" name="email" id="email" required />
+                </span>
+                <span class="input-span">
+                    <label for="text" class="label" data-i18n="translations.Body">Message</label>
+                    <textarea name="text" id="text" rows="5" required></textarea>
+                </span>
+                <input class="submit" type="submit" data-i18n-value="translations.SendMail" value="Send mail" />
+                </form>
+            </div>
+        </div>
+       <!-- Contribute Form Modal -->
+        <div id="contributeModal" class="modal-overlay contribute-overlay" style="display: none;">
+            <div class="modal-content contribute-content">
+                <form class="form_contribute" id="contributeForm">
+                <p class="contribute-description" data-i18n="translations.Description">Can't find your favorite game? Share its info with us so everyone can add its icon! 🎮✨</p>
+
+                <span class="input-span">
+                    <label for="contribEmail" class="label" data-i18n="translations.Email">Email</label>
+                    <input type="email" name="email" id="contribEmail" required />
+                </span>
+
+                <span class="input-span">
+                    <label for="gameName" class="label" data-i18n="translations.GameName">Game name</label>
+                    <input type="text" name="game" id="gameName" required/>
+                </span>
+
+                <span class="input-span">
+                    <label for="iconUrl" class="label" data-i18n="translations.IconUrl">Icon URL (.ico, 256x256)</label>
+                    <input type="url" name="url" id="iconUrl" required />
+                </span>
+
+                <input class="submit" type="submit" data-i18n-value="translations.SubmitContribute" value="Submit contribution" />
+                </form>
+            </div>
+        </div>
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="loadingspinner">
+                <div id="square1"></div>
+                <div id="square2"></div>
+                <div id="square3"></div>
+                <div id="square4"></div>
+                <div id="square5"></div>
+            </div>
+        </div>
+        <script type="module" src="./renderer.js"></script>
+    </body>
+
+</html>

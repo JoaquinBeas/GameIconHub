@@ -1,0 +1,32 @@
+{
+  "alerts": {
+    "CantConnectToBackend": "No se pudo conectar con el backend.",
+    "IcoUrlError": "La URL debe terminar en .ico",
+    "EmailError": "Por favor introduce un email válido."
+  },
+  "translations": {
+    "RemoveFromDesktop": "Quitar del escritorio",
+    "SendToDesktop": "Enviar al escritorio",
+    "Download": "Descargar",
+    "Delete": "Eliminar",
+    "Rename": "Renombrar",
+    "NoItemsMessage": "Todavía no hay elementos añadidos",
+    "RemoveFromList": "Quitar de la lista",
+    "Save": "Guardar",
+    "Cancel": "Cancelar",
+    "Sent": "Enviado",
+    "ImageDownloaded": "Imagen descargada:",
+    "Contribute": "Contribuir",
+    "Contact": "Contacto",
+    "Email": "Email",
+    "Body": "Mensaje",
+    "GameName": "Nombre del juego",
+    "IconUrl": "URL del icono (.ico, 256x256)",
+    "SendMail": "Enviar correo",
+    "SubmitContribute": "Enviar contribución",
+    "Description": "¿No encuentras tu juego favorito? ¡Compártenos la información para que todo el mundo pueda añadir el icono! 🎮✨",
+    "Placeholder": "Buscar un juego",
+    "Title": "GAME ICON HUB",
+    "DesktopIcons": "Iconos de escritorio"
+  }
+}
