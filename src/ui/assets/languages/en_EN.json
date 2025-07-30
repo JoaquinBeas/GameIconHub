@@ -1,0 +1,32 @@
+{
+  "alerts": {
+    "CantConnectToBackend": "Could not connect to the backend.",
+    "IcoUrlError": "The URL must end with .ico",
+    "EmailError": "Please enter a valid email address."
+  },
+  "translations": {
+    "RemoveFromDesktop": "Remove from desktop",
+    "SendToDesktop": "Send to desktop",
+    "Download": "Download",
+    "Delete": "Delete",
+    "Rename": "Rename",
+    "NoItemsMessage": "No items added yet",
+    "RemoveFromList": "Remove from list",
+    "Save": "Save",
+    "Cancel": "Cancel",
+    "Sent": "Sent",
+    "ImageDownloaded": "Image downloaded:",
+    "Contribute": "Contribute",
+    "Contact": "Contact",
+    "Email": "Email",
+    "Body": "Message",
+    "GameName": "Game name",
+    "IconUrl": "Icon URL (.ico, 256x256)",
+    "SendMail": "Send mail",
+    "SubmitContribute": "Submit contribution",
+    "Description": "Can't find your favorite game? Share its info with us so everyone can add its icon! 🎮✨",
+    "Placeholder": "Search a game",
+    "Title": "GAME ICON HUB",
+    "DesktopIcons": "Desktop icons"
+  }
+}

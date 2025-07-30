@@ -63,7 +63,7 @@ async function fetchWithRetry(url, retries = 10, delay = 500) {
         }
         await new Promise(resolve => setTimeout(resolve, delay));
     }
-    throw new Error(`❌ Could not connect to backend at ${url}`);
+    throw new Error(`Could not connect to backend at ${url}`);
 }
 
 // Handles the search input and results
@@ -112,7 +112,7 @@ export async function sendToDesktop(button, itemId) {
 
     button.classList.add('sent');
     const text = button.querySelector('.text');
-    if (text) text.innerHTML = 'Sent ✔️';
+    if (text) text.innerHTML = `${t('translations.Sent')} ✔️`;
 
     const baseUrl = await getBackendUrl();
 
@@ -214,9 +214,9 @@ async function downloadImage(itemId) {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(downloadUrl);
 
-        return `✅ Image downloaded: ${filename}`;
+        return `${t('translations.ImageDownloaded')} ${filename}`;
     } catch (error) {
-        throw new Error(`❌ Error downloading image: ${error.message}`);
+        throw new Error(`Error downloading image: ${error.message}`);
     }
 }
 

@@ -1,5 +1,6 @@
 import { deleteDesktopShortcut } from "../controllers/itemController.js";
 import { getBackendUrl } from "../utils/backendConfig.js";
+import { t } from '../utils/lang.js';
 
 // 🔥 OPTIMIZED VERSION: No flickering, only updates when real changes occur
 let persistentOwnedItems = [];
@@ -141,7 +142,7 @@ function updateItemText(textElement, item) {
 function createDeleteButton(item) {
   const btn = document.createElement('button');
   btn.className = 'owned-delete-btn';
-  btn.title = 'Quitar de la lista';
+  btn.title = t('translations.RemoveFromList');
   btn.innerHTML = `
         <svg class="lucide lucide-trash-2" stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="#7e8590" fill="none" viewBox="0 0 24 24" height="22" width="22">
           <path d="M3 6h18"></path>
@@ -173,7 +174,7 @@ function createEmptyMessage() {
   msg.style.opacity = '0';
   msg.style.transform = 'translateY(-10px)';
   msg.style.transition = 'all 0.2s ease-in-out';
-  msg.textContent = 'No owned items yet';
+  msg.textContent = t('translations.NoItemsMessage');
   return msg;
 }
 
@@ -315,7 +316,7 @@ function openItemCard(item, x, y) {
             <svg class="lucide lucide-pencil" stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="#7e8590" fill="none" viewBox="0 0 24 24" height="25" width="25" xmlns="http://www.w3.org/2000/svg">
               <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path>
               <path d="m15 5 4 4"></path>
-            </svg> Rename
+            </svg> ${t('translations.Rename')}
           </label>
         </li>
         <li class="element delete">
@@ -327,7 +328,7 @@ function openItemCard(item, x, y) {
               <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
               <line x1="10" x2="10" y1="11" y2="17"></line>
               <line x1="14" x2="14" y1="11" y2="17"></line>
-            </svg> Delete
+            </svg> ${t('translations.Delete')}
           </label>
         </li>
       </ul>`;
@@ -372,8 +373,8 @@ function openItemCard(item, x, y) {
     form.innerHTML = `
       <input type="text" value="${item.name}" class="rename-input" />
       <div class="rename-buttons">
-        <button class="rename-save-btn">Save</button>
-        <button class="rename-cancel-btn">Cancel</button>
+        <button class="rename-save-btn">${t('translations.Save')}</button>
+        <button class="rename-cancel-btn">${t('translations.Cancel')}</button>
       </div>
     `;
 
