@@ -58,8 +58,14 @@ async function waitForBackend(retries = 20, delay = 500) {
 }
 
 async function init() {
-    // Idioma por defecto
-    await loadLanguage('es_ES');
+    // 1️⃣ Load persisted data + language
+    const currentData = await window.api.loadData();
+    const userLang = currentData.language || 'es_ES';
+    await loadLanguage(userLang);
+    const toggle = document.getElementById('language-toggle');
+    if (toggle) {
+        toggle.checked = (userLang === 'en_EN');
+    }
     updateTextContent();
     syncronize_lang();
     wireWindowButtons();
@@ -81,24 +87,26 @@ async function init() {
     await renderOwnedItems(true);
 }
 
-function syncronize_lang(){
+function syncronize_lang() {
     const toggle = document.getElementById('language-toggle');
     if (toggle) {
-        toggle.checked = true; // ES por defecto
-
         toggle.addEventListener('change', async (e) => {
             const lang = e.target.checked ? 'en_EN' : 'es_ES';
+
             await loadLanguage(lang);
             updateTextContent();
+            renderItems();
+            await renderOwnedItems(true);
 
-            // ⚠️ Forzar re-render de elementos traducibles
-            await renderOwnedItems(true); // Sidebar
-            renderItems();                // Tarjetas principales
+            const currentData = await window.api.loadData();
+            currentData.language = lang;
+            await window.api.saveData(currentData);
         });
     }
-
 }
+
 function updateTextContent() {
+    
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         el.textContent = t(key);

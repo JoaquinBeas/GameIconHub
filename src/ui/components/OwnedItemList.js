@@ -235,8 +235,9 @@ export async function loadOwnedItemsFromPersistence() {
 async function saveOwnedItemsToPersistence() {
   try {
     const currentData = await window.api.loadData();
+
     await window.api.saveData({
-      encryptedGuid: currentData.encryptedGuid || '',
+      ...currentData,
       ownedItems: persistentOwnedItems
     });
 
