@@ -15,13 +15,15 @@ class SteamService():
     STEAMDB_BASE_URL = "https://steamdb.info"
     lenguage = "spanish"
     locale = "ES"
-    
+    # NEW: static version hint; keeps current behavior but lets us update on the fly
+    CHROME_VERSION_MAIN = 138
+
     def __init__(self, lenguage="spanish", locale="ES"):
-        # Initializes service with default or provided language/locale
         self.lenguage = lenguage
         self.locale = locale
         self.window_hider = WindowHider()
-        
+
+    
     def suggest_search(self, term):
         # Sends a search suggestion request to Steam for a game term
         url = f"{self.STEAM_BASE_URL}/search/suggest"
@@ -71,14 +73,13 @@ class SteamService():
         return response.text
 
     def get_app_page(self, app_id):
-        # Loads the SteamDB page for a given app ID using a headless Chrome driver
         url = f"{self.STEAMDB_BASE_URL}/app/{app_id}/info/"
         options = uc.ChromeOptions()
-        
-        # Configure options to disable UI and automation detection
+
+        # (unchanged) anti-automation and stealth-ish flags
         options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                           "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36")
+                             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-extensions")
@@ -92,7 +93,7 @@ class SteamService():
         options.add_argument("--window-position=-5000,-5000")
         options.add_argument("--window-size=1,1")
 
-        # Monkey patch subprocess.Popen to hide the Chrome window
+        # Monkey patch subprocess.Popen to hide the Chrome window (unchanged)
         original_popen = subprocess.Popen
         def hidden_popen(*args, **kwargs):
             startupinfo = self.window_hider.create_hidden_startupinfo()
@@ -102,20 +103,47 @@ class SteamService():
         subprocess.Popen = hidden_popen
 
         driver = None
+        tried_retry = False
+        last_err = None
+
         try:
-            driver = uc.Chrome(options=options)
-            self.window_hider.hide_chrome_completely(driver)
-            driver.get(url)
-            try:
-                WebDriverWait(driver, 5, poll_frequency=0.1).until(
-                    EC.presence_of_element_located((By.TAG_NAME, "body"))
-                )
-            except TimeoutException:
-                print("Timeout waiting for page load.")
-            return driver.page_source
-        except Exception as e:
-            print(f"Error loading page")
-            return None
+            while True:
+                try:
+                    # Use the static version hint
+                    driver = uc.Chrome(options=options, version_main=self.CHROME_VERSION_MAIN)
+                    self.window_hider.hide_chrome_completely(driver)
+                    driver.get(url)
+                    try:
+                        WebDriverWait(driver, 5, poll_frequency=0.1).until(
+                            EC.presence_of_element_located((By.TAG_NAME, "body"))
+                        )
+                    except TimeoutException:
+                        print("Timeout waiting for page load.")
+                    return driver.page_source
+                except Exception as e:
+                    last_err = e
+                    err_str = str(e)
+                    print(err_str)
+
+                    # Only retry once, and only if we can read a browser major version
+                    if not tried_retry:
+                        tried_retry = True
+                        detected_major = self._extract_browser_major(err_str)
+                        if detected_major and detected_major != self.CHROME_VERSION_MAIN:
+                            # Update the static so future calls use the corrected version
+                            SteamService.CHROME_VERSION_MAIN = detected_major
+                            # Clean up any partially created driver
+                            if driver:
+                                try:
+                                    driver.quit()
+                                except:
+                                    pass
+                            driver = None
+                            # Loop will attempt again with the new major
+                            continue
+
+                    print("Error loading page")
+                    return None
         finally:
             subprocess.Popen = original_popen
             if driver:
@@ -123,9 +151,8 @@ class SteamService():
                     driver.quit()
                 except:
                     pass
-        
+
     def get_small_icon_url(self, app_id: str) -> str:
-        # Extracts the small icon URL from a Steam app page
         url = f"{self.STEAM_BASE_URL}/app/{app_id}"
         try:
             response = requests.get(url, timeout=10)
@@ -135,4 +162,3 @@ class SteamService():
         except Exception as e:
             print(f"Error getting small icon")
             return None
-    

@@ -1,8 +1,10 @@
-// electron/main.js
+const { spawn } = require('child_process');
 const { app, BrowserWindow } = require('electron');
 const { setupIPC } = require('./ipc');
 const path = require('path');
 const fs = require('fs');
+
+let backendProcess = null; // 🔹 Declarar global
 
 function createWindow() {
     const mainWindow = new BrowserWindow({
@@ -21,43 +23,91 @@ function createWindow() {
 
     mainWindow.loadFile(path.join(__dirname, '..', 'index.html'));
     mainWindow.once('ready-to-show', () => mainWindow.show());
-    // if (process.argv.includes('--dev')) {
-    //     mainWindow.webContents.openDevTools();
-    // }
-    mainWindow.webContents.on('before-input-event', (event, input) => { //NO MORE DEVTOOLS
-        const ctrlOrCmd = input.control || input.meta;
-        if (input.type === 'keyDown' && ( input.key.toLowerCase() === 'f12' || (ctrlOrCmd && input.shift && input.key.toLowerCase() === 'i'))) {
+
+    // ❌ Desactivar DevTools
+    mainWindow.webContents.on('devtools-opened', () => {
+        mainWindow.webContents.closeDevTools();
+    });
+
+    // ❌ Bloquear atajos como Ctrl+Shift+I, F12
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+        if (
+            (input.key.toLowerCase() === 'i' && input.control && input.shift) ||
+            input.key.toLowerCase() === 'f12'
+        ) {
             event.preventDefault();
         }
     });
+
+    // if (process.argv.includes('--dev')) {
+    //     mainWindow.webContents.openDevTools();
+    // }
+
+    return mainWindow;
+}
+function launchBackend() {
+    let backendBinary;
+
+    if (app.isPackaged) {
+        // Producción: exe en resources
+        backendBinary = path.join(process.resourcesPath, 'backend', 'backend.exe');
+    } else {
+        // Desarrollo: exe generado por PyInstaller en dist_backend
+        backendBinary = path.join(__dirname, '..','..','..', 'dist_backend', 'utils.exe');
+    }
+
+    backendProcess = spawn(backendBinary, [], {
+        detached: true,
+        windowsHide: true, // 🔹 Oculta ventana negra
+        stdio: ['ignore', 'pipe', 'pipe']
+    });
+
+    backendProcess.stdout.on('data', data => console.log(`[backend] ${data}`));
+    backendProcess.stderr.on('data', data => console.error(`[backend error] ${data}`));
 }
 
-// Called when Electron is ready to start
-app.whenReady().then(() => {
+
+function waitForBackendReady(configPath, timeoutMs = 10000) {
+    return new Promise((resolve) => {
+        const start = Date.now();
+        const interval = setInterval(() => {
+            if (fs.existsSync(configPath) || Date.now() - start > timeoutMs) {
+                clearInterval(interval);
+                resolve();
+            }
+        }, 200);
+    });
+}
+
+app.whenReady().then(async () => {
+    launchBackend();
+    const configPath = path.join(app.getPath('userData'), 'config', 'backend-config.json');
+    await waitForBackendReady(configPath); // 🔹 Espera antes de abrir ventana
     createWindow();
     setupIPC();
 });
 
-// Called when all windows are closed
 app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-        // Absolute path to the backend-config.json file
-        const configPath = path.join(__dirname, '..', '..', '..', 'backend-config.json');
+    if (backendProcess) {
+        backendProcess.kill();
+        backendProcess = null;
+    }
 
-        // Check if the file exists and delete it
-        if (fs.existsSync(configPath)) {
-            try {
-                fs.unlinkSync(configPath);
-            } catch (err) {
-                console.error('Error deleting backend-config.json:', err);
-            }
+    // 🔹 Limpieza del archivo de config
+    const configPath = path.join(app.getPath('userData'), 'config', 'backend-config.json');
+    if (fs.existsSync(configPath)) {
+        try {
+            fs.unlinkSync(configPath);
+        } catch (err) {
+            console.error('Error deleting backend-config.json:', err);
         }
+    }
 
+    if (process.platform !== 'darwin') {
         app.quit();
     }
 });
 
-// macOS-specific behavior: recreate window when clicking the dock icon
 app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
         createWindow();

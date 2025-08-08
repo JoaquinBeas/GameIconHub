@@ -2,19 +2,23 @@
 
 const { contextBridge, ipcRenderer } = require('electron');
 
-// Expose Electron window control actions to the renderer
 contextBridge.exposeInMainWorld('electronAPI', {
-    winAction: (action) => ipcRenderer.invoke('win-action', action),
+  winAction: (action) => ipcRenderer.invoke('win-action', action),
 });
 
-// Expose custom app-specific API to the renderer
 contextBridge.exposeInMainWorld('api', {
-    saveData: (data) => ipcRenderer.invoke('save-data', data),
-    loadData: () => ipcRenderer.invoke('load-data'),
-    deleteShortcut: (appName) => ipcRenderer.invoke('delete-shortcut', appName),
+  saveData: (data) => ipcRenderer.invoke('save-data', data),
+  loadData: () => ipcRenderer.invoke('load-data'),
+  deleteShortcut: (appName) => ipcRenderer.invoke('delete-shortcut', appName),
 });
 
-// Expose filesystem read access to the renderer (read-only)
+// Exponemos funciones de FS
 contextBridge.exposeInMainWorld('fs', {
-    readFile: (filePath, options) => ipcRenderer.invoke('read-file', filePath, options)
+  readFile: (filePath, options) => ipcRenderer.invoke('read-file', filePath, options),
+  unlink: (filePath) => ipcRenderer.invoke('unlink-file', filePath)
+});
+
+// Exponemos la función para obtener la ruta al backend-config.json
+contextBridge.exposeInMainWorld('paths', {
+  getBackendConfigPath: () => ipcRenderer.invoke('get-backend-config-path')
 });

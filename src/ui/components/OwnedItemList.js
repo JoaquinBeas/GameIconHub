@@ -177,9 +177,13 @@ function createEmptyMessage() {
   msg.style.opacity = '0';
   msg.style.transform = 'translateY(-10px)';
   msg.style.transition = 'all 0.2s ease-in-out';
-  msg.textContent = t('translations.NoItemsMessage');
+
+  msg.setAttribute('data-i18n', 'translations.NoItemsMessage');
+  msg.textContent = t('translations.NoItemsMessage'); // initial fill
+
   return msg;
 }
+
 
 // 🎬 Entry animation
 function slideIn(element) {
@@ -224,7 +228,6 @@ export async function loadOwnedItemsFromPersistence() {
     loadCache = items;
     lastLoadTime = now;
   } catch (error) {
-    console.error('Error loading owned items from persistence:', error);
     persistentOwnedItems = [];
     loadCache = [];
     lastLoadTime = now;
@@ -423,7 +426,7 @@ function openItemCard(item, x, y) {
           })
         });
       } catch (err) {
-        console.error("Error renaming shortcut on backend:", err);
+        console.error("Error renaming shortcut:", err);
       }
 
       form.remove();

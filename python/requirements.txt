@@ -1,13 +1,14 @@
 fastapi
+build
 uvicorn
 BeautifulSoup4
+setuptools 
+wheel
 undetected-chromedriver 
 selenium
 concurrently
 pyshortcuts
 pillow
+pymongo[srv]==3.12
 Levenshtein
 setuptools
-motor==3.7.1
-pymongo>=4.10
-pyinstaller

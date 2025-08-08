@@ -7,6 +7,7 @@ import { t } from '../utils/lang.js';
 
 export let items = [];
 export let filteredItems = [];
+let searchTimeout;
 
 // Renders the filtered items into the container
 export function renderItems() {
@@ -15,6 +16,9 @@ export function renderItems() {
     filteredItems.forEach(item => {
         const card = createItemCard(item);
         container.appendChild(card);
+        requestAnimationFrame(() => {
+            card.classList.add('show');
+        });
     });
 }
 
@@ -67,7 +71,14 @@ async function fetchWithRetry(url, retries = 10, delay = 500) {
 }
 
 // Handles the search input and results
-export async function handleSearch() {
+export function handleSearchDebounced() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        handleSearch();
+    }, 300); // espera 300 ms desde la última tecla
+}
+
+async function handleSearch() {
     const searchInput = document.getElementById('searchInput');
     const searchTerm = searchInput.value.trim();
     const query = encodeURIComponent(searchTerm);
@@ -79,7 +90,7 @@ export async function handleSearch() {
         let res = await fetch(url);
         let data = await res.json();
 
-        // Fallback to suggest if result is too small
+        // Fallback a /suggest si es pequeño
         if (!Array.isArray(data) || data.length < 3) {
             console.warn('Search returned empty. Trying /suggest...');
             const fallbackRes = await fetch(`${baseUrl}/suggest?term=${query}`);

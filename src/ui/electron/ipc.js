@@ -88,9 +88,37 @@ function setupIPC() {
 
     // Read a file from disk (used by renderer via preload)
     ipcMain.handle('read-file', async (event, filePath, options) => {
-        const absolutePath = path.join(__dirname, '..', '..', '..', filePath); // Adjust if saving in a different location
+        const absolutePath = path.isAbsolute(filePath)
+            ? filePath
+            : path.join(__dirname, '..', '..', '..', filePath);
         return fs.promises.readFile(absolutePath, options || 'utf8');
     });
+
+    // ipcMain.handle('get-backend-config-path', () => {
+    //     const baseDir = app.getPath('userData');
+    //     return path.join(baseDir, 'config', 'backend-config.json');
+    // });
+    ipcMain.handle('get-backend-config-path', () => {
+        if (process.platform === 'win32') {
+            return path.join(process.env.APPDATA, 'gameiconhub', 'config', 'backend-config.json');
+        } else {
+            return path.join(app.getPath('home'), '.config', 'gameiconhub', 'config', 'backend-config.json');
+        }
+    });
+    ipcMain.handle('unlink-file', async (event, filePath) => {
+    try {
+        const absolutePath = path.isAbsolute(filePath)
+            ? filePath
+            : path.join(__dirname, '..', '..', '..', filePath);
+
+        await fs.promises.unlink(absolutePath);
+        return true;
+    } catch (err) {
+        console.error('Error borrando archivo:', err);
+        throw err;
+    }
+});
+
 }
 
 // Removes invalid characters from filenames

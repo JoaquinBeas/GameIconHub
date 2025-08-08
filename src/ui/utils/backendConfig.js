@@ -1,32 +1,49 @@
-// utils/backendConfig.js
-
 let backendConfig = null;
 
-// Reads the backend configuration from the JSON file
-export async function getBackendConfig() {
-    if (backendConfig) {
-        return backendConfig;
+async function waitForFileExists(filePath, retries = 50, delay = 200) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const data = await window.fs.readFile(filePath, { encoding: 'utf8' });
+            return data;
+        } catch (error) {
+            const isEnoent =
+                error.code === 'ENOENT' ||
+                (error.message && error.message.includes('ENOENT'));
+
+            if (isEnoent) {
+                await new Promise(res => setTimeout(res, delay));
+                continue;
+            }
+            throw error;
+        }
     }
+    return null;
+}
+
+
+export async function getBackendConfig() {
+    if (backendConfig) return backendConfig;
 
     try {
-        // In Electron, you can read files using fs
-        if (window.fs && window.fs.readFile) {
-            const configData = await window.fs.readFile('backend-config.json', { encoding: 'utf8' });
-            backendConfig = JSON.parse(configData);
-            return backendConfig;
+        const configPath = await window.paths.getBackendConfigPath();
+
+        const configData = await waitForFileExists(configPath);
+        if (!configData) {
+            throw new Error('backend-config.json no encontrado en 10 segundos');
         }
 
-        // Fallback: try fetch (for web development mode)
-        const response = await fetch('/backend-config.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        backendConfig = JSON.parse(configData);
+
+        // Borrar después de leerlo para evitar puertos antiguos en siguiente arranque
+        try {
+            await window.fs.unlink(configPath);
+        } catch (err) {
+            console.warn('No se pudo borrar config.json:', err);
         }
-        backendConfig = await response.json();
+
         return backendConfig;
-
     } catch (error) {
-        console.warn('Could not read backend configuration, falling back to default port:', error);
-        // Fallback to default port
+        console.warn('No se pudo leer config.json, usando fallback:', error);
         backendConfig = {
             backend_port: 8000,
             backend_url: 'http://127.0.0.1:8000'
@@ -35,13 +52,11 @@ export async function getBackendConfig() {
     }
 }
 
-// Gets the backend base URL
 export async function getBackendUrl() {
-    const config = await getBackendConfig();
-    return config.backend_url;
+    const cfg = await getBackendConfig();
+    return cfg.backend_url;
 }
 
-// Clears the cached configuration (useful for reloads)
 export function clearBackendConfigCache() {
     backendConfig = null;
 }

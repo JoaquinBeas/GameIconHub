@@ -1,6 +1,6 @@
 // renderer.js
 
-import { renderItems, handleSearch, loadInitialItems } from './controllers/itemController.js';
+import { renderItems, handleSearchDebounced, loadInitialItems } from './controllers/itemController.js';
 import { setupMenu } from './controllers/menuController.js';
 import { setupModalImageClick } from './components/Modal.js';
 import { renderOwnedItems, loadOwnedItemsFromPersistence } from './components/OwnedItemList.js';
@@ -28,10 +28,10 @@ function setupSearchHandlers() {
     const searchButton = document.getElementById('searchButton');
     const searchInput = document.getElementById('searchInput');
 
-    searchButton?.addEventListener('click', handleSearch);
-    searchInput?.addEventListener('input', handleSearch);
+    searchButton?.addEventListener('click', handleSearchDebounced);
+    searchInput?.addEventListener('input', handleSearchDebounced);
     searchInput?.addEventListener('keypress', e => {
-        if (e.key === 'Enter') handleSearch();
+        if (e.key === 'Enter') handleSearchDebounced();
     });
 }
 

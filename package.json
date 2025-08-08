@@ -1,13 +1,50 @@
 {
   "name": "gameiconhub",
   "version": "1.0.0",
-  "private": true,
+  "main": "src/ui/electron/main.js",
+  "build": {
+    "appId": "com.iconhub.desktop",
+    "productName": "Game Icon Hub",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/ui/**/*",
+      "python/**/*",
+      "requirements.txt",
+      "build.js",
+      "!node_modules/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "dist_backend/backend",
+        "to": "backend",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "src/ui/assets/app_icon_big.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
   "scripts": {
+    "start": "electron . --dev",
     "backend": "cd src && python start_backend.py",
-    "ui": "npm start --prefix src/ui",
-    "start-all": "concurrently -k -n BACKEND,UI -c red,cyan \"npm run backend\" \"npm run ui\""
+    "start-all": "npm run start",
+    "build-backend": "python\\python.exe -m PyInstaller --noconsole src/start_backend.py --distpath dist_backend --name backend",
+    "prebuild": "npm run build-backend",
+    "build": "electron-builder"
   },
   "devDependencies": {
-    "concurrently": "^8.2.0"
+    "concurrently": "^8.2.0",
+    "electron": "^37.2.4",
+    "electron-builder": "^26.0.12"
   }
 }

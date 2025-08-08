@@ -211,3 +211,4 @@ __marimo__/
 .vscode
 node_modules
 backend-config.json
+dist_backend/
