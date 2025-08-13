@@ -83,8 +83,7 @@ async def get_app_icon_url(app_id: str = Path(...)):
     if cached and "icon_url" in cached:
         return cached["icon_url"]
 
-    response = steam_client.get_app_page(app_id)
-    icon_url = response_cleaner.extract_icon_url(response)
+    icon_url = steam_client.get_icon_url(app_id)  # <- NUEVO
     if icon_url:
         await app.state.mongo.insert_icon({"id": app_id, "icon_url": icon_url})
         return icon_url
@@ -107,8 +106,7 @@ async def get_app_icon_image(app_id: str = Path(...)):
     if cached and "icon_url" in cached:
         icon_url = cached["icon_url"]
     else:
-        response = steam_client.get_app_page(app_id)
-        icon_url = response_cleaner.extract_icon_url(response)
+        icon_url = steam_client.get_icon_url(app_id)  # <- NUEVO
         if not icon_url:
             raise HTTPException(status_code=404, detail="Icon URL no encontrada")
         await app.state.mongo.insert_icon({"id": app_id, "icon_url": icon_url})
@@ -144,8 +142,7 @@ async def generate_shortcut(app_id: str = Path(...), data: ShortcutRequest = Bod
     if cached_icon and "icon_url" in cached_icon:
         icon_url = cached_icon["icon_url"]
     else:
-        response = steam_client.get_app_page(app_id)
-        icon_url = response_cleaner.extract_icon_url(response)
+        icon_url = steam_client.get_icon_url(app_id)  # <- NUEVO
         if not icon_url:
             return {"success": False, "error": "No se pudo obtener el icono"}
         await app.state.mongo.insert_icon({"id": app_id, "icon_url": icon_url})
@@ -201,8 +198,3 @@ async def contribute(data: ContributeRequest):
     except Exception as e:
         print("Error al enviar contribución:", e)
         raise HTTPException(status_code=500, detail="Error al enviar contribución")
-    
-@app.get("/app-page/{app_id}")
-async def get_app_page(app_id: str = Path(...)):
-    page = steam_client.get_app_page(app_id)
-    return page

@@ -2,8 +2,8 @@
 
 import json
 import re
-from io import BytesIO
-from PIL import Image
+# from io import BytesIO
+# from PIL import Image
 from typing import List, Literal
 from bs4 import BeautifulSoup
 from backend.models.entities.infinite_search_result import InfiniteSearchResult, PriceInfo
@@ -139,29 +139,29 @@ class ResponseCleaner:
 
         return results
 
-    def extract_icon_url(self, response):
-        """Extracts the icon URL from a raw HTML response (typically from SteamDB)."""
-        soup = BeautifulSoup(response, "html.parser")
+    # def extract_icon_url(self, response):
+    #     """Extracts the icon URL from a raw HTML response (typically from SteamDB)."""
+    #     soup = BeautifulSoup(response, "html.parser")
         
-        for tr in soup.find_all("tr"):
-            tds = tr.find_all("td")
-            # Look for row where the first column is "clienticon"
-            if len(tds) >= 2 and tds[0].get_text(strip=True).lower() == "clienticon":
-                a_tag = tds[1].find("a", href=True)
-                if a_tag:
-                    return a_tag["href"]
+    #     for tr in soup.find_all("tr"):
+    #         tds = tr.find_all("td")
+    #         # Look for row where the first column is "clienticon"
+    #         if len(tds) >= 2 and tds[0].get_text(strip=True).lower() == "clienticon":
+    #             a_tag = tds[1].find("a", href=True)
+    #             if a_tag:
+    #                 return a_tag["href"]
         
-        return None
+    #     return None
 
-    def transform_into_icon(self, response: bytes, size: tuple[int, int] = (64, 64)):
-        """Converts raw image bytes into a resized PNG icon in memory."""
-        with Image.open(BytesIO(response)) as img:
-            img = img.convert("RGBA")  # Ensure transparent background
-            img = img.resize(size, Image.LANCZOS)  # High-quality resize
-            output = BytesIO()
-            img.save(output, format="PNG")
-            output.seek(0)  # Reset stream position
-            return output
+    # def transform_into_icon(self, response: bytes, size: tuple[int, int] = (64, 64)):
+    #     """Converts raw image bytes into a resized PNG icon in memory."""
+    #     with Image.open(BytesIO(response)) as img:
+    #         img = img.convert("RGBA")  # Ensure transparent background
+    #         img = img.resize(size, Image.LANCZOS)  # High-quality resize
+    #         output = BytesIO()
+    #         img.save(output, format="PNG")
+    #         output.seek(0)  # Reset stream position
+    #         return output
 
     def _parse_price(self, col_price) -> PriceInfo:
         """
